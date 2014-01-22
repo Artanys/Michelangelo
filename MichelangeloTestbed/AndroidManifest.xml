@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.michelangelotestbed"
+    package="com.michelangelo"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -14,13 +14,49 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.example.michelangelotestbed.MichelangeloMainPage"
-            android:label="@string/app_name" >
+            android:name="com.michelangelo.MichelangeloCamera"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_michelangelo_camera"
+            android:theme="@style/FullscreenTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.michelangelo.MichelangeloGallery"
+            android:label="@string/title_activity_michelangelo_gallery"
+            android:parentActivityName="com.michelangelo.MichelangeloCamera" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.michelangelo.MichelangeloCamera" />
+        </activity>
+        <activity
+            android:name="com.michelangelo.MichelangeloHelp"
+            android:label="@string/title_activity_michelangelo_help"
+            android:parentActivityName="com.michelangelo.MichelangeloCamera" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.michelangelo.MichelangeloCamera" />
+        </activity>
+        <activity
+            android:name="com.michelangelo.MichelangeloAbout"
+            android:label="@string/title_activity_michelangelo_about"
+            android:parentActivityName="com.michelangelo.MichelangeloCamera" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.michelangelo.MichelangeloCamera" />
+        </activity>
+        <activity
+            android:name="com.michelangelo.MichelangeloModelviewer"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_michelangelo_modelviewer"
+            android:parentActivityName="com.michelangelo.MichelangeloGallery"
+            android:theme="@style/FullscreenTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.michelangelo.MichelangeloGallery" />
         </activity>
     </application>
 
