@@ -11,5 +11,11 @@
     <string name="title_activity_michelangelo_help">Help</string>
     <string name="title_activity_michelangelo_about">About</string>
     <string name="title_activity_michelangelo_modelviewer">Model Viewer</string>
-
+    <string-array
+        name="menuOptions">
+        <item>Number of Images</item>
+        <item>Help</item>
+        <item>About</item>
+    </string-array>
+    
 </resources>
