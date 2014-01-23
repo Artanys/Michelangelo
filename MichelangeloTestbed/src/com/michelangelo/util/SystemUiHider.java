@@ -51,7 +51,15 @@ public abstract class SystemUiHider {
 	 * the device allows hiding it. In cases where the navigation bar is present
 	 * but cannot be hidden, show and hide will toggle low profile mode.
 	 */
-	public static final int FLAG_HIDE_NAVIGATION = FLAG_FULLSCREEN | 0x4;
+	public static final int FLAG_HIDE_NAVIGATION = 0x4;
+	
+	/**
+	 * When this flag is set, {@link #show()} and {@link #hide()} will toggle
+	 * the visibility of the navigation bar and status bar, if they are present on the device and
+	 * the device allows hiding them. In cases where the navigation bar and status bar are present
+	 * but cannot be hidden, show and hide will toggle low profile mode.
+	 */
+	public static final int FLAG_HIDE_NAV_STATUS = FLAG_FULLSCREEN | 0x4;
 
 	/**
 	 * The activity associated with this UI hider object.

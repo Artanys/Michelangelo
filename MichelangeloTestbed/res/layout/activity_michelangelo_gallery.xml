@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:text="@string/content_gallery" />
 
     <Button
         android:id="@+id/button1"
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="Button" 
+        android:text="@string/dummy_button" 
         android:onClick="buttonClicked"/>
 
 </RelativeLayout>
