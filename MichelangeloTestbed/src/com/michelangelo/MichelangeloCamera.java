@@ -9,7 +9,6 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -25,8 +24,6 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
-    
-    private int mNumImagesToCapture = 8;
 
 	public void buttonClicked(View view) {
 	    Intent intent = new Intent(this, MichelangeloGallery.class);
@@ -79,7 +76,7 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 	
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
 	    @Override
-	    public void onItemClick(AdapterView parent, View view, int position, long id) {
+	    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 	        selectItem(position);
 	    }
 	}

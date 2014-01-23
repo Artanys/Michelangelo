@@ -33,5 +33,8 @@
     <string name="setting_num_images_min">6</string>
     <string name="setting_num_images_max">10</string>
     <string name="setting_num_images_default">8</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_share">Share</string>
+    <string name="gallery_item_desc">An image</string>
 
 </resources>
