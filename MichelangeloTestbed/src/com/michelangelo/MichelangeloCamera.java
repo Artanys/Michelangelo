@@ -36,7 +36,7 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 
 		setContentView(R.layout.activity_michelangelo_camera);			
 
-		menuOptions = getResources().getStringArray(R.array.menuOptions);
+		menuOptions = getResources().getStringArray(R.array.menu_options_camera);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         
@@ -138,7 +138,7 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
     // Fragment.onAttach() callback, which it uses to call the following methods
     // defined by the NoticeDialogFragment.NoticeDialogListener interface
     @Override
-    public void onDialogPositiveClick(DialogFragment dialog, int numImages) {
+    public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages) {
         // User touched the dialog's positive button
     	// Update # of photos used to create model, delete previous photos/depth maps, start over
     	SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
@@ -148,7 +148,7 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
     }
 
     @Override
-    public void onDialogNegativeClick(DialogFragment dialog) {
+    public void onCaptureSettingsNegativeClick(DialogFragment dialog) {
         // User touched the dialog's negative button
     	// User cancelled the dialog, don't update/start over
         

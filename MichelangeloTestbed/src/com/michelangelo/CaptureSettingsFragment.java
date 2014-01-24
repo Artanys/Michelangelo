@@ -37,13 +37,13 @@ public class CaptureSettingsFragment extends DialogFragment {
                 	   // Send the positive button event back to the host activity
                 	   int numImages = ((SeekBar) view.findViewById(R.id.seekBar)).getProgress();
                 	   numImages += 6;
-                       mListener.onDialogPositiveClick(CaptureSettingsFragment.this, numImages);
+                       mListener.onCaptureSettingsPositiveClick(CaptureSettingsFragment.this, numImages);
                    }
                })
                .setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
                        // Send the positive button event back to the host activity
-                       mListener.onDialogNegativeClick(CaptureSettingsFragment.this);
+                       mListener.onCaptureSettingsNegativeClick(CaptureSettingsFragment.this);
                    }
                });
         
@@ -91,8 +91,8 @@ public class CaptureSettingsFragment extends DialogFragment {
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface CaptureSettingsListener {
-        public void onDialogPositiveClick(DialogFragment dialog, int numImages);
-        public void onDialogNegativeClick(DialogFragment dialog);
+        public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages);
+        public void onCaptureSettingsNegativeClick(DialogFragment dialog);
     }
     
     // Override the Fragment.onAttach() method to instantiate the CaptureSettingsListener

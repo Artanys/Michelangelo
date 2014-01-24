@@ -50,10 +50,8 @@
         </activity>
         <activity
             android:name="com.michelangelo.MichelangeloModelviewer"
-            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_michelangelo_modelviewer"
-            android:parentActivityName="com.michelangelo.MichelangeloGallery"
-            android:theme="@style/FullscreenTheme" >
+            android:parentActivityName="com.michelangelo.MichelangeloGallery" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.michelangelo.MichelangeloGallery" />

@@ -1,11 +1,11 @@
 package com.michelangelo;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.ActionMode;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,10 +17,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
-public class MichelangeloGallery extends Activity {
+public class MichelangeloGallery extends Activity implements ConfirmDeleteFragment.ConfirmDeleteListener{
 
 	public void buttonClicked(View view) {
 	    Intent intent = new Intent(this, MichelangeloGallery.class);
@@ -44,20 +44,6 @@ public class MichelangeloGallery extends Activity {
 	            startActivity(intent);
 	        }
 	    });
-	    
-	    /*gridview.setOnLongClickListener(new View.OnLongClickListener() {
-	        // Called when the user long-clicks on someView
-	        public boolean onLongClick(View view) {
-	            if (mActionMode != null) {
-	                return false;
-	            }
-
-	            // Start the CAB using the ActionMode.Callback defined above
-	            mActionMode = getActivity().startActionMode(mActionModeCallback);
-	            view.setSelected(true);
-	            return true;
-	        }
-	    });*/
 
 		gridview.setSelector(R.drawable.ic_action_accept);
 		gridview.setDrawSelectorOnTop(true);
@@ -84,11 +70,14 @@ public class MichelangeloGallery extends Activity {
 		        // Respond to clicks on the actions in the CAB
 		        switch (item.getItemId()) {
 		            case R.id.action_delete:
-		                //deleteSelectedItems();
+		    			// Create an instance of the dialog fragment and show it
+		    	        DialogFragment dialog = new ConfirmDeleteFragment();
+		    	        dialog.show(getFragmentManager(), "ConfirmDeleteFragment");
+		    	        numSelected = 0;
 		                mode.finish(); // Action picked, so close the CAB
 		                return true;
 		            case R.id.action_share:
-		                //deleteSelectedItems();
+		    	        numSelected = 0;
 		                mode.finish(); // Action picked, so close the CAB
 		                return true;
 		            default:
@@ -101,8 +90,24 @@ public class MichelangeloGallery extends Activity {
 		        // Inflate the menu for the CAB
 		        MenuInflater inflater = mode.getMenuInflater();
 		        inflater.inflate(R.menu.michelangelo_gallery, menu);
+		        // Get the menu item.
+		        MenuItem menuItem = menu.findItem(R.id.action_share);
+		        // Get the provider and hold onto it to set/change the share intent.
+		        ShareActionProvider mShareActionProvider = (ShareActionProvider) menuItem.getActionProvider();
+		        // Attach an intent to this ShareActionProvider.  You can update this at any time,
+		        // like when the user selects a new piece of data they might like to share.
+		        mShareActionProvider.setShareIntent(createShareIntent());
 		        return true;
 		    }
+		    
+		    private Intent createShareIntent() {
+		        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+		        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+		        shareIntent.setType("text/plain");
+		        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "3D Model(s) Shared");
+		        shareIntent.putExtra(Intent.EXTRA_TEXT, "Shared from Michelangelo's Gallery!");
+		        return shareIntent;
+		    } 
 		
 		    @Override
 		    public void onDestroyActionMode(ActionMode mode) {
@@ -205,4 +210,17 @@ public class MichelangeloGallery extends Activity {
 	    };
 	}
 
+	// The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onConfirmDeletePositiveClick(DialogFragment dialog) {
+        // User touched the dialog's positive button
+        //deleteSelectedItems();
+    }
+
+    @Override
+    public void onConfirmDeleteNegativeClick(DialogFragment dialog) {
+        // User touched the dialog's negative button        
+    }
 }
