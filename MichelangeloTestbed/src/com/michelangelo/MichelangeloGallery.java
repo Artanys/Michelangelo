@@ -1,9 +1,15 @@
 package com.michelangelo;
 
+import java.util.ArrayList;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -15,6 +21,8 @@ import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.Checkable;
+import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ShareActionProvider;
@@ -22,6 +30,36 @@ import android.widget.Toast;
 
 public class MichelangeloGallery extends Activity implements ConfirmDeleteFragment.ConfirmDeleteListener{
 
+    public class CheckableLayout extends FrameLayout implements Checkable {
+        private boolean mChecked;
+ 
+        public CheckableLayout(Context context) {
+            super(context);
+        }
+ 
+        @SuppressWarnings("deprecation")
+        //@SuppressLint("NewApi")
+		public void setChecked(boolean checked) {
+            mChecked = checked;
+            setBackgroundDrawable(checked ? getResources().getDrawable(
+                    R.drawable.ic_action_accept) : null);
+            if(checked){
+            	this.animate().rotationX(15);
+            } else {
+            	this.animate().rotationX(0);
+            }
+        }
+ 
+        public boolean isChecked() {
+            return mChecked;
+        }
+ 
+        public void toggle() {
+            setChecked(!mChecked);
+        }
+ 
+    }
+	
 	public void buttonClicked(View view) {
 	    Intent intent = new Intent(this, MichelangeloGallery.class);
 	    startActivity(intent);
@@ -58,6 +96,8 @@ public class MichelangeloGallery extends Activity implements ConfirmDeleteFragme
 		        // such as update the title in the CAB
 		    	if ( checked ) {
 		    		numSelected ++;
+		    		//ImageView imageView = (ImageView) gridview.getAdapter().getItem(position);
+		            
 		    	}
 		    	else {
 		    		numSelected --;
@@ -159,6 +199,7 @@ public class MichelangeloGallery extends Activity implements ConfirmDeleteFragme
 	}
 	
 	private class ImageAdapter extends BaseAdapter {
+		ArrayList<ImageView> thumbNails = new ArrayList<ImageView>();
 	    private Context mContext;
 
 	    public ImageAdapter(Context c) {
@@ -170,7 +211,7 @@ public class MichelangeloGallery extends Activity implements ConfirmDeleteFragme
 	    }
 
 	    public Object getItem(int position) {
-	        return null;
+	        return thumbNails.get(position);
 	    }
 
 	    public long getItemId(int position) {
@@ -180,18 +221,27 @@ public class MichelangeloGallery extends Activity implements ConfirmDeleteFragme
 	    // create a new ImageView for each item referenced by the Adapter
 	    public View getView(int position, View convertView, ViewGroup parent) {
 	        ImageView imageView;
+	        CheckableLayout layout;
 	        
 	        if (convertView == null) {  // if it's not recycled, initialize some attributes
-	            imageView = new ImageView(mContext);
+	            imageView = new ImageView(MichelangeloGallery.this);
 	            imageView.setLayoutParams(new GridView.LayoutParams(320, 320));
 	            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 	            imageView.setPadding(8, 8, 8, 8);
+	            layout = new CheckableLayout(MichelangeloGallery.this);
+                layout.setLayoutParams(new GridView.LayoutParams(
+                        GridView.LayoutParams.WRAP_CONTENT,
+                        GridView.LayoutParams.WRAP_CONTENT));
+                layout.addView(imageView);
 	        } else {
-	            imageView = (ImageView) convertView;
+	        	layout = (CheckableLayout) convertView;
+	            imageView = (ImageView) layout.getChildAt(0);
 	        }
 
 	        imageView.setImageResource(mThumbIds[position]);
-	        return imageView;
+	        thumbNails.add(position, imageView);
+	        
+	        return layout;
 	    }
 
 	    // references to our images
