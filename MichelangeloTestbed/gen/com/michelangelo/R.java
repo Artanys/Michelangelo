@@ -24,7 +24,12 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
     }
     public static final class color {
         public static final int black_overlay=0x7f040000;
+<<<<<<< HEAD
         public static final int burnt_orange=0x7f040001;
+=======
+        public static final int blue=0x7f040001;
+        public static final int transparent=0x7f040002;
+>>>>>>> origin/master
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -37,20 +42,22 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int activity_vertical_margin=0x7f050001;
     }
     public static final class drawable {
-        public static final int drawer_shadow=0x7f020000;
-        public static final int ic_action_accept=0x7f020001;
-        public static final int ic_action_discard=0x7f020002;
-        public static final int ic_action_share=0x7f020003;
-        public static final int ic_drawer=0x7f020004;
-        public static final int ic_launcher=0x7f020005;
-        public static final int sample_0=0x7f020006;
-        public static final int sample_1=0x7f020007;
-        public static final int sample_2=0x7f020008;
-        public static final int sample_3=0x7f020009;
-        public static final int sample_4=0x7f02000a;
-        public static final int sample_5=0x7f02000b;
-        public static final int sample_6=0x7f02000c;
-        public static final int sample_7=0x7f02000d;
+        public static final int check_mark=0x7f020000;
+        public static final int drawer_shadow=0x7f020001;
+        public static final int ic_action_accept=0x7f020002;
+        public static final int ic_action_discard=0x7f020003;
+        public static final int ic_action_share=0x7f020004;
+        public static final int ic_drawer=0x7f020005;
+        public static final int ic_launcher=0x7f020006;
+        public static final int sample_0=0x7f020007;
+        public static final int sample_1=0x7f020008;
+        public static final int sample_2=0x7f020009;
+        public static final int sample_3=0x7f02000a;
+        public static final int sample_4=0x7f02000b;
+        public static final int sample_5=0x7f02000c;
+        public static final int sample_6=0x7f02000d;
+        public static final int sample_7=0x7f02000e;
+        public static final int selector=0x7f02000f;
     }
     public static final class id {
 <<<<<<< HEAD
