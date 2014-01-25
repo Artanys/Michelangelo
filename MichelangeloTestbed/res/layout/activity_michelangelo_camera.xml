@@ -1,16 +1,21 @@
 <android.support.v4.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".MichelangeloCamera" >
     <!-- The main content view -->
-	<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	    xmlns:tools="http://schemas.android.com/tools"
+	<FrameLayout 
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
+<<<<<<< HEAD
 	    android:background="#000000"
 	    tools:context=".MichelangeloCamera"
 	    android:id="@+id/camera_preview" >
+=======
+    	android:background="#0099cc" >
+>>>>>>> origin/master
 	
 	    <!--
 	         The primary full-screen view. This can be replaced with whatever view
@@ -60,6 +65,7 @@
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:stackFromBottom="true"
         android:choiceMode="singleChoice"
         android:divider="@android:color/transparent"
         android:dividerHeight="10dp"
