@@ -18,56 +18,16 @@ import android.widget.ShareActionProvider;
 public class MichelangeloModelviewer extends MichelangeloUI implements ModelviewerSettingsFragment.ModelviewerSettingsListener,
 	ConfirmDeleteFragment.ConfirmDeleteListener {
 
-	/**
-	 * Menu options
-	 */
-    private String[] menuOptions;
-    private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
-    private ActionBarDrawerToggle mDrawerToggle;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
-		setContentView(R.layout.activity_michelangelo_modelviewer);
-		
+		setContentView(R.layout.activity_michelangelo_modelviewer);		
 		super.onCreate(savedInstanceState);
-
-		menuOptions = getResources().getStringArray(R.array.menu_options_modelviewer);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        
-        mDrawerToggle = new ActionBarDrawerToggle(
-                this,                  /* host Activity */
-                mDrawerLayout,         /* DrawerLayout object */
-                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-                R.string.action_open_drawer,  /* "open drawer" description */
-                R.string.action_close_drawer  /* "close drawer" description */
-                ) {
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
-        };
-        
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-    	
+   	
 		setupActionBar();
         getActionBar().setDisplayShowHomeEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
-
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item, menuOptions));
-        // Set the list's click listener
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
 	}
 	
