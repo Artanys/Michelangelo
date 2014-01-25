@@ -9,13 +9,10 @@
 	<FrameLayout 
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-<<<<<<< HEAD
 	    android:background="#000000"
 	    tools:context=".MichelangeloCamera"
+	    android:visibility="visible"
 	    android:id="@+id/camera_preview" >
-=======
-    	android:background="#0099cc" >
->>>>>>> origin/master
 	
 	    <!--
 	         The primary full-screen view. This can be replaced with whatever view
@@ -32,31 +29,28 @@
             android:id="@+id/fullscreen_content_controls"
             style="?buttonBarStyle"
             android:layout_width="match_parent"
-            android:layout_height="fill_parent"
-            android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/black_overlay"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent" />
-
-        <FrameLayout
-            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-			android:id="@+id/button_capture_layout" >
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="horizontal"
+            android:visibility="visible"
+            tools:ignore="UselessParent" >
+
 	        <Button
 	            android:id="@+id/button_capture"
 	            style="?buttonBarButtonStyle"
 	            android:layout_width="fill_parent"
 	            android:layout_height="wrap_content"
+	            android:background="@color/burnt_orange"
 	            android:text="@string/dummy_button"
-	            android:background="@color/burnt_orange" 
-	            android:onClick="buttonClicked" />
-	    </FrameLayout>
+	            android:visibility="visible" />
+	    </LinearLayout>
 	</FrameLayout>
 	
     <RelativeLayout
-	    style="@style/GenericProgressBackground"
-	    android:id="@+id/loadingPanel"
-	    >
+        android:id="@+id/loadingPanel"
+        style="@style/GenericProgressBackground"
+        android:visibility="gone" >
+
 	    <ProgressBar
 	        style="@style/GenericProgressIndicator"/>
 	</RelativeLayout>

@@ -1,6 +1,5 @@
 package com.michelangelo;
 
-<<<<<<< HEAD
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -30,7 +29,6 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-=======
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
@@ -41,27 +39,26 @@ import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
->>>>>>> origin/master
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-<<<<<<< HEAD
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-=======
->>>>>>> origin/master
+import android.widget.LinearLayout;
+
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 
-<<<<<<< HEAD
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  * 
  * @see SystemUiHider
  */
-public class MichelangeloCamera extends Activity {
+
+public class MichelangeloCamera extends Activity implements CaptureSettingsFragment.CaptureSettingsListener {
+
 	
 	private static final String TAG = "MichelangeloCamera";
 	public static final int MEDIA_TYPE_IMAGE = 1;
@@ -97,10 +94,6 @@ public class MichelangeloCamera extends Activity {
 	 */
 	private SystemUiHider mSystemUiHider;
 	
-=======
-public class MichelangeloCamera extends Activity implements CaptureSettingsFragment.CaptureSettingsListener {
->>>>>>> origin/master
-
 	/**
 	 * Menu options
 	 */
@@ -108,23 +101,15 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
-
-	public void buttonClicked(View view) {
-	    Intent intent = new Intent(this, MichelangeloGallery.class);
-	    startActivity(intent);
-	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-<<<<<<< HEAD
 		setContentView(R.layout.activity_michelangelo_camera);
 
-		final View controlsView = findViewById(R.id.fullscreen_content_controls);
+//		final View controlsView = findViewById(R.id.fullscreen_content_controls);
 		final View contentView = findViewById(R.id.camera_preview);
-		
-		findViewById(R.id.loadingPanel).setVisibility(View.GONE);
         
 		// Set up an instance of SystemUiHider to control the system UI for
 		// this activity.
@@ -132,46 +117,45 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 				HIDER_FLAGS);
 		mSystemUiHider.setup();
 		
-		mSystemUiHider
-				.setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-					// Cached values.
-					int mControlsHeight;
-					int mShortAnimTime;
-
-					@Override
-					@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-					public void onVisibilityChange(boolean visible) {
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-							// If the ViewPropertyAnimator API is available
-							// (Honeycomb MR2 and later), use it to animate the
-							// in-layout UI controls at the bottom of the
-							// screen.
-							if (mControlsHeight == 0) {
-								mControlsHeight = controlsView.getHeight();
-							}
-							if (mShortAnimTime == 0) {
-								mShortAnimTime = getResources().getInteger(
-										android.R.integer.config_shortAnimTime);
-							}
-							controlsView
-									.animate()
-									.translationY(visible ? 0 : mControlsHeight)
-									.setDuration(mShortAnimTime);
-						} else {
-							// If the ViewPropertyAnimator APIs aren't
-							// available, simply show or hide the in-layout UI
-							// controls.
-							controlsView.setVisibility(visible ? View.VISIBLE
-									: View.GONE);
-						}
-
-						if (visible && AUTO_HIDE) {
-							// Schedule a hide().
-							delayedHide(AUTO_HIDE_DELAY_MILLIS);
-						}
-					}
-				});
-		Log.d(TAG, "Done Setting UI of Camera Page");
+//		mSystemUiHider
+//				.setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
+//					// Cached values.
+//					int mControlsHeight;
+//					int mShortAnimTime;
+//
+//					@Override
+//					@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+//					public void onVisibilityChange(boolean visible) {
+//						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+//							// If the ViewPropertyAnimator API is available
+//							// (Honeycomb MR2 and later), use it to animate the
+//							// in-layout UI controls at the bottom of the
+//							// screen.
+//							if (mControlsHeight == 0) {
+//								mControlsHeight = controlsView.getHeight();
+//							}
+//							if (mShortAnimTime == 0) {
+//								mShortAnimTime = getResources().getInteger(
+//										android.R.integer.config_shortAnimTime);
+//							}
+//							controlsView
+//									.animate()
+//									.translationY(visible ? 0 : mControlsHeight)
+//									.setDuration(mShortAnimTime);
+//						} else {
+//							// If the ViewPropertyAnimator APIs aren't
+//							// available, simply show or hide the in-layout UI
+//							// controls.
+//							controlsView.setVisibility(visible ? View.VISIBLE
+//									: View.GONE);
+//						}
+//
+//						if (visible && AUTO_HIDE) {
+//							// Schedule a hide().
+////							delayedHide(AUTO_HIDE_DELAY_MILLIS);
+//						}
+//					}
+//				});
 
 		// Set up the user interaction to manually show or hide the system UI.
 		contentView.setOnClickListener(new View.OnClickListener() {
@@ -196,16 +180,6 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 		        }
 		    }
 		);
-
-		// Upon interacting with UI controls, delay any scheduled hide()
-		// operations to prevent the jarring behavior of controls going away
-		// while interacting with the UI.
-//		findViewById(R.id.dummy_button).setOnTouchListener(
-//				mDelayHideTouchListener);
-		
-=======
-		setContentView(R.layout.activity_michelangelo_camera);			
->>>>>>> origin/master
 
 		menuOptions = getResources().getStringArray(R.array.menu_options_camera);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -241,19 +215,15 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
         mDrawerList.setAdapter(new ArrayAdapter<String>(this,
                 R.layout.drawer_list_item, menuOptions));
         // Set the list's click listener
-<<<<<<< HEAD
+
         //mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         
         grabCamera();
-        
-        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.button_capture_layout);
-        frameLayout.bringToFront();
        
         Log.d(TAG, "Done creating Camera Page");
-=======
+
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
->>>>>>> origin/master
 	}
 	
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
@@ -316,7 +286,6 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 		if ( position != 0 ) startActivity ( intent );
 	}
 	
-<<<<<<< HEAD
 	/** A safe way to get an instance of the Camera object. */
 	/** http://developer.android.com/guide/topics/media/camera.html#custom-camera, January 21, 2014 */
 	public static Camera getCameraInstance(){
@@ -530,12 +499,14 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 				preview.removeView(mPreview);
 			}
 	        mPreview = new CameraPreview(this, mCamera);
-	        preview.addView(mPreview);
-//			mCamera.startPreview();
+	        preview.addView(mPreview, 1);
+	        LinearLayout button_frame = (LinearLayout) findViewById(R.id.fullscreen_content_controls);
+	        preview.removeView(button_frame);
+	        preview.addView(button_frame);
+			mCamera.startPreview();
 		}
 	}
 	
-=======
 	// The dialog fragment receives a reference to this Activity through the
     // Fragment.onAttach() callback, which it uses to call the following methods
     // defined by the NoticeDialogFragment.NoticeDialogListener interface
@@ -555,5 +526,5 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
     	// User cancelled the dialog, don't update/start over
         
     }
->>>>>>> origin/master
+
 }
