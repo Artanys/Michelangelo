@@ -57,7 +57,7 @@ import android.widget.RelativeLayout;
  * @see SystemUiHider
  */
 
-public class MichelangeloCamera extends Activity implements CaptureSettingsFragment.CaptureSettingsListener {
+public class MichelangeloCamera extends MichelangeloUI implements CaptureSettingsFragment.CaptureSettingsListener {
 
 	
 	private static final String TAG = "MichelangeloCamera";
@@ -82,93 +82,31 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 	 * If set, will toggle the system UI visibility upon interaction. Otherwise,
 	 * will show the system UI visibility upon interaction.
 	 */
-	private static final boolean TOGGLE_ON_CLICK = false;
+	//private static final boolean TOGGLE_ON_CLICK = false;
 
 	/**
 	 * The flags to pass to {@link SystemUiHider#getInstance}.
 	 */
-	private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
+	//private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
 
 	/**
 	 * The instance of the {@link SystemUiHider} for this activity.
 	 */
-	private SystemUiHider mSystemUiHider;
+	//private SystemUiHider mSystemUiHider;
 	
 	/**
 	 * Menu options
 	 */
-    private String[] menuOptions;
-    private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
-    private ActionBarDrawerToggle mDrawerToggle;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_michelangelo_camera);
 
-//		final View controlsView = findViewById(R.id.fullscreen_content_controls);
+		final View controlsView = findViewById(R.id.fullscreen_content_controls);
 		final View contentView = findViewById(R.id.camera_preview);
-        
-		// Set up an instance of SystemUiHider to control the system UI for
-		// this activity.
-		mSystemUiHider = SystemUiHider.getInstance(this, contentView,
-				HIDER_FLAGS);
-		mSystemUiHider.setup();
-		
-//		mSystemUiHider
-//				.setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-//					// Cached values.
-//					int mControlsHeight;
-//					int mShortAnimTime;
-//
-//					@Override
-//					@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-//					public void onVisibilityChange(boolean visible) {
-//						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-//							// If the ViewPropertyAnimator API is available
-//							// (Honeycomb MR2 and later), use it to animate the
-//							// in-layout UI controls at the bottom of the
-//							// screen.
-//							if (mControlsHeight == 0) {
-//								mControlsHeight = controlsView.getHeight();
-//							}
-//							if (mShortAnimTime == 0) {
-//								mShortAnimTime = getResources().getInteger(
-//										android.R.integer.config_shortAnimTime);
-//							}
-//							controlsView
-//									.animate()
-//									.translationY(visible ? 0 : mControlsHeight)
-//									.setDuration(mShortAnimTime);
-//						} else {
-//							// If the ViewPropertyAnimator APIs aren't
-//							// available, simply show or hide the in-layout UI
-//							// controls.
-//							controlsView.setVisibility(visible ? View.VISIBLE
-//									: View.GONE);
-//						}
-//
-//						if (visible && AUTO_HIDE) {
-//							// Schedule a hide().
-////							delayedHide(AUTO_HIDE_DELAY_MILLIS);
-//						}
-//					}
-//				});
 
-		// Set up the user interaction to manually show or hide the system UI.
-		contentView.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if (TOGGLE_ON_CLICK) {
-					mSystemUiHider.toggle();
-				} else {
-					mSystemUiHider.show();
-				}
-				mCamera.autoFocus(null);
-			}
-		});
 		
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(
@@ -181,39 +119,12 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
 		    }
 		);
 
-		menuOptions = getResources().getStringArray(R.array.menu_options_camera);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        
-        mDrawerToggle = new ActionBarDrawerToggle(
-                this,                  /* host Activity */
-                mDrawerLayout,         /* DrawerLayout object */
-                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-                R.string.action_open_drawer,  /* "open drawer" description */
-                R.string.action_close_drawer  /* "close drawer" description */
-                ) {
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
-        };
-        
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setDisplayShowHomeEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
 
         // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item, menuOptions));
         // Set the list's click listener
 
         //mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
@@ -222,70 +133,10 @@ public class MichelangeloCamera extends Activity implements CaptureSettingsFragm
        
         Log.d(TAG, "Done creating Camera Page");
 
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
 	}
 	
-	private class DrawerItemClickListener implements ListView.OnItemClickListener {
-	    @Override
-	    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-	        selectItem(position);
-	    }
-	}
-	
-	@Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // Sync the toggle state after onRestoreInstanceState has occurred.
-        mDrawerToggle.syncState();
-    }
-	
-	@Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
-    }
-	
-	@Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Pass the event to ActionBarDrawerToggle, if it returns
-        // true, then it has handled the app icon touch event
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-          return true;
-        }
-        // Handle your other action bar items...
 
-        return super.onOptionsItemSelected(item);
-    }
-
-	/** Performs navigation when a drawer item is clicked */
-	private void selectItem(int position) {
-		Intent intent = null;
-		
-		switch ( position ) {
-		case 0:
-			// Create an instance of the dialog fragment and show it
-	        DialogFragment dialog = new CaptureSettingsFragment();
-	        dialog.show(getFragmentManager(), "CaptureSettingsFragment");
-			break;
-		case 1:
-			intent = new Intent ( this, MichelangeloGallery.class );
-			break;
-		case 2:
-			intent = new Intent ( this, MichelangeloHelp.class );
-			break;
-		case 3:
-			intent = new Intent ( this, MichelangeloAbout.class );
-			break;
-		}
-
-	    // Highlight the selected item, update the title, and close the drawer
-	    //mDrawerList.setItemChecked(position, true);
-	    mDrawerLayout.closeDrawer(mDrawerList);
-		
-		if ( position != 0 ) startActivity ( intent );
-	}
-	
 	/** A safe way to get an instance of the Camera object. */
 	/** http://developer.android.com/guide/topics/media/camera.html#custom-camera, January 21, 2014 */
 	public static Camera getCameraInstance(){

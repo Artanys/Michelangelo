@@ -5,12 +5,12 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MichelangeloHelp extends Activity {
+public class MichelangeloHelp extends MichelangeloUI {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_michelangelo_help);
+		super.onCreate(savedInstanceState);
 		// Show the Up button in the action bar.
 		setupActionBar();
 	}

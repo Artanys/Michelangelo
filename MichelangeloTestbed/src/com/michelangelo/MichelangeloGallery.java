@@ -17,6 +17,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
 import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -28,7 +30,7 @@ import android.widget.ImageView;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
-public class MichelangeloGallery extends Activity implements ConfirmDeleteFragment.ConfirmDeleteListener{
+public class MichelangeloGallery extends MichelangeloUI implements ConfirmDeleteFragment.ConfirmDeleteListener{
 
     public class CheckableLayout extends FrameLayout implements Checkable {
         private boolean mChecked;
@@ -67,8 +69,8 @@ public class MichelangeloGallery extends Activity implements ConfirmDeleteFragme
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_michelangelo_gallery);
+		super.onCreate(savedInstanceState);
 		// Show the Up button in the action bar.
 		setupActionBar();
 		

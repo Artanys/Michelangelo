@@ -7,10 +7,10 @@
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="19" />
-    
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
+
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature android:name="android.hardware.sensor.accelerometer" />
@@ -64,6 +64,10 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.michelangelo.MichelangeloGallery" />
+        </activity>
+        <activity
+            android:name="com.michelangelo.MichelangeloUI"
+            android:label="@string/title_activity_michelangelo_ui" >
         </activity>
     </application>
 

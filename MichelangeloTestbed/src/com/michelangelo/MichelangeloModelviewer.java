@@ -15,7 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ShareActionProvider;
 
-public class MichelangeloModelviewer extends Activity implements ModelviewerSettingsFragment.ModelviewerSettingsListener,
+public class MichelangeloModelviewer extends MichelangeloUI implements ModelviewerSettingsFragment.ModelviewerSettingsListener,
 	ConfirmDeleteFragment.ConfirmDeleteListener {
 
 	/**
@@ -28,9 +28,10 @@ public class MichelangeloModelviewer extends Activity implements ModelviewerSett
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_michelangelo_modelviewer);	
+		setContentView(R.layout.activity_michelangelo_modelviewer);
+		
+		super.onCreate(savedInstanceState);
 
 		menuOptions = getResources().getStringArray(R.array.menu_options_modelviewer);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
