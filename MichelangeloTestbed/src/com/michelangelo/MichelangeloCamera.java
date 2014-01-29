@@ -26,12 +26,13 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
-public class MichelangeloCamera extends MichelangeloUI implements CaptureSettingsFragment.CaptureSettingsListener {
+public class MichelangeloCamera extends MichelangeloUI {
 
 	
 	private static final String TAG = "MichelangeloCamera";
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
+	public static int NUM_IMAGES = 8;
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
 	
@@ -291,25 +292,5 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
 			mCamera.startPreview();
 		}
 	}
-	
-	// The dialog fragment receives a reference to this Activity through the
-    // Fragment.onAttach() callback, which it uses to call the following methods
-    // defined by the NoticeDialogFragment.NoticeDialogListener interface
-    @Override
-    public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages) {
-        // User touched the dialog's positive button
-    	// Update # of photos used to create model, delete previous photos/depth maps, start over
-    	SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-    	SharedPreferences.Editor editor = sharedPref.edit();
-    	editor.putInt(getString(R.string.saved_setting_num_images), numImages);
-    	editor.commit();
-    }
-
-    @Override
-    public void onCaptureSettingsNegativeClick(DialogFragment dialog) {
-        // User touched the dialog's negative button
-    	// User cancelled the dialog, don't update/start over
-        
-    }
 
 }

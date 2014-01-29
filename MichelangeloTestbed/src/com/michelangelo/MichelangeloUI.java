@@ -4,7 +4,9 @@ package com.michelangelo;
 
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -16,7 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class MichelangeloUI extends Activity {
+public class MichelangeloUI extends Activity  implements CaptureSettingsFragment.CaptureSettingsListener {
 
     protected String[] menuOptions;
     protected DrawerLayout mDrawerLayout;
@@ -118,5 +120,27 @@ public class MichelangeloUI extends Activity {
 		if ( position != 0 ) startActivity ( intent );
 	}
 	
+	
+	// The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages) {
+        // User touched the dialog's positive button
+    	// Update # of photos used to create model, delete previous photos/depth maps, start over
+    	//SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+    	//SharedPreferences.Editor editor = sharedPref.edit();
+    	//editor.putInt(getString(R.string.saved_setting_num_images), numImages);
+    	//editor.commit();
+    	
+    	MichelangeloCamera.NUM_IMAGES = numImages;
+    }
+
+    @Override
+    public void onCaptureSettingsNegativeClick(DialogFragment dialog) {
+        // User touched the dialog's negative button
+    	// User cancelled the dialog, don't update/start over
+        
+    }
 
 }
