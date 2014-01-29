@@ -7,55 +7,24 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.michelangelo.util.SystemUiHider;
-
-import android.R.id;
-import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.content.Context;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.provider.MediaStore.Files.FileColumns;
-import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.app.Activity;
-import android.app.DialogFragment;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.widget.DrawerLayout;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-
-import android.widget.ListView;
-import android.widget.RelativeLayout;
-
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- * 
- * @see SystemUiHider
- */
 
 public class MichelangeloCamera extends MichelangeloUI implements CaptureSettingsFragment.CaptureSettingsListener {
 
@@ -66,47 +35,10 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
 	
-	/**
-	 * Whether or not the system UI should be auto-hidden after
-	 * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-	 */
-	private static final boolean AUTO_HIDE = true;
-
-	/**
-	 * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-	 * user interaction before hiding the system UI.
-	 */
-	private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
-
-	/**
-	 * If set, will toggle the system UI visibility upon interaction. Otherwise,
-	 * will show the system UI visibility upon interaction.
-	 */
-	//private static final boolean TOGGLE_ON_CLICK = false;
-
-	/**
-	 * The flags to pass to {@link SystemUiHider#getInstance}.
-	 */
-	//private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
-
-	/**
-	 * The instance of the {@link SystemUiHider} for this activity.
-	 */
-	//private SystemUiHider mSystemUiHider;
-	
-	/**
-	 * Menu options
-	 */
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
-
-
-		final View controlsView = findViewById(R.id.fullscreen_content_controls);
-		final View contentView = findViewById(R.id.camera_preview);
-
 		
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(
@@ -114,6 +46,7 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
 		        @Override
 		        public void onClick(View v) {
 		            // get an image from the camera
+		        	mCamera.autoFocus(null);
 		            mCamera.takePicture(null, null, mPicture);
 		        }
 		    }
@@ -129,6 +62,7 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
 
         //mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         
+        releaseCamera();
         grabCamera();
        
         Log.d(TAG, "Done creating Camera Page");
@@ -145,7 +79,7 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
 	        c = Camera.open(); // attempt to get a Camera instance
 	    }
 	    catch (Exception e){
-	        // Camera is not available (in use or does not exist)
+	        // Camera is not available (in use or does not exist)	
 	    }
 	    return c; // returns null if camera is unavailable
 	}
