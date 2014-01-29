@@ -127,13 +127,12 @@ public class MichelangeloUI extends Activity  implements CaptureSettingsFragment
     @Override
     public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages) {
         // User touched the dialog's positive button
-    	// Update # of photos used to create model, delete previous photos/depth maps, start over
-    	//SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-    	//SharedPreferences.Editor editor = sharedPref.edit();
-    	//editor.putInt(getString(R.string.saved_setting_num_images), numImages);
-    	//editor.commit();
     	
-    	MichelangeloCamera.NUM_IMAGES = numImages;
+    	if(MichelangeloCamera.NUM_IMAGES != numImages) {
+    		// Update # of photos used to create model, delete previous photos/depth maps, start over    		
+    		MichelangeloCamera.NUM_IMAGES = numImages;
+    		
+    	}
     }
 
     @Override
