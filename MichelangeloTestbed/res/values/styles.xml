@@ -48,4 +48,19 @@
 	    <item name="android:indeterminate">true</item> 
 	</style>
 
+	<style name="drawer_layout_style">
+	    <item name="android:layout_width">match_parent</item>
+	    <item name="android:layout_height">match_parent</item>
+	</style>
+	
+	<style name="left_drawer_style">
+	    <item name="android:layout_width">240dp</item>
+	    <item name="android:layout_height">match_parent</item>
+	    <item name="android:layout_gravity">start</item>
+	    <item name="android:stackFromBottom">true</item>
+	    <item name="android:choiceMode">singleChoice</item>
+	    <item name="android:divider">@android:color/transparent</item>
+	    <item name="android:dividerHeight">10dp</item>
+	    <item name="android:background">#111</item>
+	</style>
 </resources>

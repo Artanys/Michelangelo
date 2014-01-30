@@ -90,15 +90,16 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 		                                          long id, boolean checked) {
 		        // Here you can do something when items are selected/de-selected,
 		        // such as update the title in the CAB
-		    	if ( checked ) {
+		    	/*if ( checked ) {
+		    		
 		    		numSelected ++;
 		    		ImageView imageView = (ImageView) gridview.getAdapter().getItem(position);
 		            //imageView.setColorFilter(Color.LTGRAY, PorterDuff.Mode.OVERLAY);
 		    	}
 		    	else {
 		    		numSelected --;
-		    	}
-		    	mode.setTitle(numSelected + " selected");
+		    	}*/
+		    	mode.setTitle(gridview.getCheckedItemCount() + " selected");
 		    }
 		
 		    @Override
