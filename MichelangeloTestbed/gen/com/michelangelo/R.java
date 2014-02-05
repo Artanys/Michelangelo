@@ -114,6 +114,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int hello_blank_fragment=0x7f06000f;
         public static final int hello_world=0x7f060002;
         public static final int saved_setting_num_images=0x7f060013;
+        public static final int sensor_output=0x7f060021;
         public static final int setting_modelviewer_desc=0x7f06001c;
         public static final int setting_num_images_default=0x7f060017;
         public static final int setting_num_images_desc=0x7f060012;

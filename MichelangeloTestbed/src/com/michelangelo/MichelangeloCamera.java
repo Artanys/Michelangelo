@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,6 +41,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class MichelangeloCamera extends MichelangeloUI implements
 		CaptureSettingsFragment.CaptureSettingsListener {
@@ -53,7 +56,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private ArrayList<Future<Bitmap>> mTaskList = null;
 	private ArrayList<DepthMapper> mDMList = null;
 	private Handler mHandler = null;
-
+	private MichelangeloSensor mSensor;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
@@ -72,17 +76,37 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setDisplayShowHomeEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
-
-		// Set the adapter for the list view
-		// Set the list's click listener
-
-		// mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-
-		releaseCamera();
-		grabCamera();
-
-		Log.d(TAG, "Done creating Camera Page");
-
+		
+		FrameLayout cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
+		cameraPreview.setOnClickListener(
+			new View.OnClickListener() {
+		        @Override
+		        public void onClick(View v) {
+		            // get an image from the camera
+		        	mCamera.autoFocus(null);
+		        }
+		    }
+		);
+		
+		final Handler handler = new Handler();
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				handler.post(new Runnable() {
+					public void run() {
+						TextView tv = (TextView) findViewById(R.id.button_capture);
+				        tv.setText("yaw: " + mSensor.orientation[0] + " pitch: " + mSensor.orientation[1] + " roll: " + mSensor.orientation[2]);
+					}
+				});
+			}
+		},1000,1000);
+		
+        releaseCamera();
+        grabCamera();
+        mSensor = new MichelangeloSensor();
+        mSensor.onCreate(this);
+       
+        Log.d(TAG, "Done creating Camera Page");
 	}
 
 	/** A safe way to get an instance of the Camera object. */
@@ -192,6 +216,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Log.d(TAG, "Taking Picture");
 			mPreview.setVisibility(View.GONE);
 			findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
+            findViewById(R.id.loadingPanel).bringToFront();
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
 				Log.d(TAG,
@@ -312,28 +337,37 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
-		releaseCamera(); // release the camera immediately on pause event
-	}
-
+    protected void onPause() {
+        super.onPause();
+        releaseCamera();              // release the camera immediately on pause event
+        mSensor.onPause();
+    }
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		grabCamera();
 		mCamera.startPreview();
+		mSensor.onResume();
 	}
-
-	private void releaseCamera() {
-		if (mCamera != null) {
-			mCamera.stopPreview();
-			mCamera.release(); // release the camera for other applications
-			mCamera = null;
-		}
-	}
-
-	private void grabCamera() {
-		if (mCamera == null) {
+	
+	@Override
+    protected void onDestroy() {
+        super.onDestroy();
+        releaseCamera();              // release the camera immediately on pause event
+        mSensor.onDestroy();
+    }
+	
+	private void releaseCamera(){
+        if (mCamera != null){
+        	mCamera.stopPreview();
+            mCamera.release();        // release the camera for other applications
+            mCamera = null;
+        }
+    }
+	
+	private void grabCamera(){
+		if (mCamera == null){
 			mCamera = getCameraInstance();
 			Parameters params = mCamera.getParameters();
 			List<Size> sizes = params.getSupportedPictureSizes();
@@ -365,6 +399,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		}
 	}
 
+	
 	private byte[] getYV12(int inputWidth, int inputHeight, Bitmap scaled) {
 
 		int[] argb = new int[inputWidth * inputHeight];

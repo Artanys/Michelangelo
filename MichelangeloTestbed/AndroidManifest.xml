@@ -24,6 +24,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.michelangelo.MichelangeloCamera"
+            android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_michelangelo_camera"
             android:theme="@style/FullscreenTheme" >

@@ -31,9 +31,13 @@
             android:layout_height="wrap_content"
             android:background="@color/burnt_orange"
             android:text="@string/dummy_button"
-            android:visibility="visible" />
+            android:visibility="visible"   
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="horizontal"
+            tools:ignore="UselessParent" />
+
     </LinearLayout>
-	    
+	
     <RelativeLayout
         android:id="@+id/loadingPanel"
         style="@style/GenericProgressBackground"
@@ -44,5 +48,3 @@
 	    
 	</RelativeLayout>
 </FrameLayout>
-	
-
