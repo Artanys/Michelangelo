@@ -6,6 +6,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
+
 import java.lang.Math;;
 
 public class MichelangeloSensor implements SensorEventListener {
@@ -82,8 +83,6 @@ public class MichelangeloSensor implements SensorEventListener {
             orientation[0] = (int)(orientation[0]*DEG);
             orientation[1] = (int)(orientation[1]*DEG+90);
             orientation[2] = (int)(orientation[2]*DEG);
-            
-            Log.d(TAG, "yaw: " + orientation[0] + " pitch: " + orientation[1] + " roll: " + orientation[2]);
         }			
 	}
 }

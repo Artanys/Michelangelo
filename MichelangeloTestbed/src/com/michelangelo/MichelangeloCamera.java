@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.DialogFragment;
@@ -17,6 +19,7 @@ import android.hardware.Camera.PictureCallback;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -25,6 +28,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class MichelangeloCamera extends MichelangeloUI implements CaptureSettingsFragment.CaptureSettingsListener {
 
@@ -63,6 +67,19 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
 		        }
 		    }
 		);
+		
+		final Handler handler = new Handler();
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				handler.post(new Runnable() {
+					public void run() {
+						TextView tv = (TextView) findViewById(R.id.button_capture);
+				        tv.setText("yaw: " + mSensor.orientation[0] + " pitch: " + mSensor.orientation[1] + " roll: " + mSensor.orientation[2]);
+					}
+				});
+			}
+		},1000,1000);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setDisplayShowHomeEnabled(true);

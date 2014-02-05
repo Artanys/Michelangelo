@@ -43,6 +43,7 @@
 	            android:background="@color/burnt_orange"
 	            android:text="@string/dummy_button"
 	            android:visibility="visible" />
+
 	    </LinearLayout>
 	</FrameLayout>
 	
