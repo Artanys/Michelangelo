@@ -35,12 +35,13 @@ public class MichelangeloCamera extends MichelangeloUI {
 	public static int NUM_IMAGES = 8;
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
+	private MichelangeloSensor mSensor;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
-		
+	
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(
 		    new View.OnClickListener() {
@@ -52,22 +53,28 @@ public class MichelangeloCamera extends MichelangeloUI {
 		        }
 		    }
 		);
-
+		
+		FrameLayout cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
+		cameraPreview.setOnClickListener(
+			new View.OnClickListener() {
+		        @Override
+		        public void onClick(View v) {
+		            // get an image from the camera
+		        	mCamera.autoFocus(null);
+		        }
+		    }
+		);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setDisplayShowHomeEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
 
-        // Set the adapter for the list view
-        // Set the list's click listener
-
-        //mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-        
         releaseCamera();
         grabCamera();
+        mSensor = new MichelangeloSensor();
+        mSensor.onCreate(this);
        
         Log.d(TAG, "Done creating Camera Page");
-
 
 	}
 	
@@ -170,6 +177,7 @@ public class MichelangeloCamera extends MichelangeloUI {
 	    	Log.d(TAG, "Taking Picture");
 	    	mPreview.setVisibility(View.GONE);
             findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
+            findViewById(R.id.loadingPanel).bringToFront();
 	        File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 	        if (pictureFile == null){
 				Log.d(TAG, "Error creating media file, check storage permissions");
@@ -259,6 +267,7 @@ public class MichelangeloCamera extends MichelangeloUI {
     protected void onPause() {
         super.onPause();
         releaseCamera();              // release the camera immediately on pause event
+        mSensor.onPause();
     }
 	
 	@Override
@@ -266,7 +275,15 @@ public class MichelangeloCamera extends MichelangeloUI {
 		super.onResume();
 		grabCamera();
 		mCamera.startPreview();
+		mSensor.onResume();
 	}
+	
+	@Override
+    protected void onDestroy() {
+        super.onDestroy();
+        releaseCamera();              // release the camera immediately on pause event
+        mSensor.onDestroy();
+    }
 	
 	private void releaseCamera(){
         if (mCamera != null){
@@ -292,5 +309,25 @@ public class MichelangeloCamera extends MichelangeloUI {
 			mCamera.startPreview();
 		}
 	}
+	
+	// The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages) {
+        // User touched the dialog's positive button
+    	// Update # of photos used to create model, delete previous photos/depth maps, start over
+    	SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+    	SharedPreferences.Editor editor = sharedPref.edit();
+    	editor.putInt(getString(R.string.saved_setting_num_images), numImages);
+    	editor.commit();
+    }
 
+    @Override
+    public void onCaptureSettingsNegativeClick(DialogFragment dialog) {
+        // User touched the dialog's negative button
+    	// User cancelled the dialog, don't update/start over
+        
+    }
+    
 }
