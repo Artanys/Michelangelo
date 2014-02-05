@@ -2,6 +2,7 @@ package com.michelangelo;
 
 import java.util.ArrayList;
 
+import android.annotation.SuppressLint;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
@@ -36,13 +37,13 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
         //@SuppressLint("NewApi")
 		public void setChecked(boolean checked) {
             mChecked = checked;
-            setBackgroundDrawable(checked ? getResources().getDrawable(
-                    R.drawable.ic_action_accept) : null);
-            if(checked){
+            setBackgroundDrawable(checked ? getResources().getDrawable(R.color.blue) : null);
+            
+            /*if(checked){
             	this.animate().rotationX(15);
             } else {
             	this.animate().rotationX(0);
-            }
+            }*/
         }
  
         public boolean isChecked() {
@@ -78,8 +79,8 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 	        }
 	    });
 
-		gridview.setSelector(R.drawable.ic_action_accept);
-		gridview.setDrawSelectorOnTop(true);
+		//gridview.setSelector(R.color.transparent_blue);
+		//gridview.setDrawSelectorOnTop(true);
 		gridview.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
 		gridview.setMultiChoiceModeListener(new MultiChoiceModeListener() {
 			private int numSelected = 0;
@@ -89,15 +90,16 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 		                                          long id, boolean checked) {
 		        // Here you can do something when items are selected/de-selected,
 		        // such as update the title in the CAB
-		    	if ( checked ) {
+		    	/*if ( checked ) {
+		    		
 		    		numSelected ++;
-		    		//ImageView imageView = (ImageView) gridview.getAdapter().getItem(position);
-		            
+		    		ImageView imageView = (ImageView) gridview.getAdapter().getItem(position);
+		            //imageView.setColorFilter(Color.LTGRAY, PorterDuff.Mode.OVERLAY);
 		    	}
 		    	else {
 		    		numSelected --;
-		    	}
-		    	mode.setTitle(numSelected + " selected");
+		    	}*/
+		    	mode.setTitle(gridview.getCheckedItemCount() + " selected");
 		    }
 		
 		    @Override
@@ -214,7 +216,8 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 	    }
 
 	    // create a new ImageView for each item referenced by the Adapter
-	    public View getView(int position, View convertView, ViewGroup parent) {
+	    @SuppressLint("NewApi")
+		public View getView(int position, View convertView, ViewGroup parent) {
 	        ImageView imageView;
 	        CheckableLayout layout;
 	        
@@ -222,6 +225,7 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 	            imageView = new ImageView(MichelangeloGallery.this);
 	            imageView.setLayoutParams(new GridView.LayoutParams(320, 320));
 	            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+	            imageView.setCropToPadding(true);
 	            imageView.setPadding(8, 8, 8, 8);
 	            layout = new CheckableLayout(MichelangeloGallery.this);
                 layout.setLayoutParams(new GridView.LayoutParams(

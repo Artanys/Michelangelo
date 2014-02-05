@@ -32,10 +32,10 @@ import android.widget.TextView;
 
 public class MichelangeloCamera extends MichelangeloUI implements CaptureSettingsFragment.CaptureSettingsListener {
 
-	
 	private static final String TAG = "MichelangeloCamera";
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
+	public static int NUM_IMAGES = 8;
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
 	private MichelangeloSensor mSensor;
@@ -345,5 +345,4 @@ public class MichelangeloCamera extends MichelangeloUI implements CaptureSetting
     	// User cancelled the dialog, don't update/start over
         
     }
-    
 }

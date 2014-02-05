@@ -74,14 +74,13 @@ public class CaptureSettingsFragment extends DialogFragment {
             public void onStopTrackingTouch(SeekBar bar) {
             }
         });
+        
         // Update the seekbar with the last value
-        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
-        int defaultValue = Integer.valueOf(getString(R.string.setting_num_images_default));;
-        if ( sharedPref.contains(getString(R.string.saved_setting_num_images) ) ) {
-	        int prevValue = sharedPref.getInt(getString(R.string.saved_setting_num_images), defaultValue);
-	        seekBar.setProgress(prevValue - 6);
-        	((TextView) view.findViewById(R.id.textView2)).setText(String.valueOf(prevValue));
-        }
+
+    	int prevValue = MichelangeloCamera.NUM_IMAGES;
+        seekBar.setProgress(prevValue - 6);
+    	((TextView) view.findViewById(R.id.textView2)).setText(Integer.toString(prevValue));
+
         
         // Create the AlertDialog object and return it
         return builder.create();
