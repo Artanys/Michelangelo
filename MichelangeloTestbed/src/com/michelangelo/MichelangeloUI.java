@@ -14,23 +14,35 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 
-public class MichelangeloUI extends Activity {
+public class MichelangeloUI extends Activity  implements CaptureSettingsFragment.CaptureSettingsListener {
 
     protected String[] menuOptions;
     protected DrawerLayout mDrawerLayout;
+    protected FrameLayout fullLayout;
+    protected FrameLayout contentFrame;
     protected ListView mDrawerList;
     protected ActionBarDrawerToggle mDrawerToggle;
-    //protected boolean isMain;
     
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 
+	public void setContentView(final int layoutResID) {
+
+		/* First, inflate out the layout and include the current layout to the Michelangelo_UI shell*/
+		
+		mDrawerLayout = (DrawerLayout) getLayoutInflater().inflate(R.layout.activity_michelangelo_ui, null);
 		menuOptions = getResources().getStringArray(R.array.menu_options_camera);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+        contentFrame = (FrameLayout) mDrawerLayout.findViewById(R.id.content_frame);
+        getLayoutInflater().inflate(layoutResID, contentFrame, true);
+        super.setContentView(mDrawerLayout);
+        
+        // Generate the common UI
+        
+        mDrawerList = (ListView) findViewById(R.id.main_left_drawer);
+        
+        //ActionBar
         
         mDrawerToggle = new ActionBarDrawerToggle(
                 this,                  /* host Activity */
@@ -39,17 +51,17 @@ public class MichelangeloUI extends Activity {
                 R.string.action_open_drawer,  /* "open drawer" description */
                 R.string.action_close_drawer  /* "close drawer" description */
                 );
-             
+        
+        // Display the "back" arrow only if this isn't the root child
+        
         mDrawerToggle.setDrawerIndicatorEnabled(isTaskRoot());
         
         // Set the drawer toggle as the DrawerListener
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-		//setContentView(R.layout.activity_michelangelo_ui);
-
         mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item, menuOptions));
-        
+                R.layout.drawer_list_item, menuOptions));        
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
 	}
 
 	@Override
@@ -118,5 +130,26 @@ public class MichelangeloUI extends Activity {
 		if ( position != 0 ) startActivity ( intent );
 	}
 	
+	
+	// The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onCaptureSettingsPositiveClick(DialogFragment dialog, int numImages) {
+        // User touched the dialog's positive button
+    	
+    	if(MichelangeloCamera.NUM_IMAGES != numImages) {
+    		// Update # of photos used to create model, delete previous photos/depth maps, start over    		
+    		MichelangeloCamera.NUM_IMAGES = numImages;
+    		
+    	}
+    }
+
+    @Override
+    public void onCaptureSettingsNegativeClick(DialogFragment dialog) {
+        // User touched the dialog's negative button
+    	// User cancelled the dialog, don't update/start over
+        
+    }
 
 }
