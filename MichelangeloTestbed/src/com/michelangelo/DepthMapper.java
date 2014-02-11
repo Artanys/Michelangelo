@@ -20,7 +20,7 @@ public class DepthMapper implements Callable<Bitmap> {
 	}
 
 	public enum FILTER_MODE {
-		MEDIAN, TRIMMED_MEAN, BILATERAL, GAUSSIAN, AVERAGE;
+		MEDIAN, TRIMMED_MEAN, BILATERAL, BILSUB, GAUSSIAN, AVERAGE;
 	}
 
 	private interface FilterFunc {
@@ -59,6 +59,11 @@ public class DepthMapper implements Callable<Bitmap> {
 		filters.put(FILTER_MODE.BILATERAL, new FilterFunc() {
 			public Byte filter(Window window) {
 				return window.getBilateral();
+			}
+		});
+		filters.put(FILTER_MODE.BILSUB, new FilterFunc() {
+			public Byte filter(Window window) {
+				return window.getBilateralSub();
 			}
 		});
 		filters.put(FILTER_MODE.GAUSSIAN, new FilterFunc() {
@@ -693,6 +698,50 @@ public class DepthMapper implements Callable<Bitmap> {
 			}
 			sum /= norm;
 			return new Byte((byte) sum);
+		}
+
+		public Byte getBilateralSub() {
+			int sum = 0;
+			int norm = 0;
+			int center = (int) getCenter() & 0xff;
+
+			switch (mWindowHeight) {
+			case 3:
+				for (int i = 0; i < mWindowHeight; i++) {
+					for (int j = 0; j < mWindowWidth; j++) {
+						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int coeff = mG3Coeffs[i * mWindowHeight + j]
+								* mHCoeffs[Math.abs(center - val)];
+						sum += val * coeff;
+						norm += coeff;
+					}
+				}
+				break;
+			case 5:
+				for (int i = 0; i < mWindowHeight; i++) {
+					for (int j = 0; j < mWindowWidth; j++) {
+						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int coeff = mG5Coeffs[i * mWindowHeight + j]
+								* mHCoeffs[Math.abs(center - val)];
+						sum += val * coeff;
+						norm += coeff;
+					}
+				}
+				break;
+			case 7:
+				for (int i = 0; i < mWindowHeight; i++) {
+					for (int j = 0; j < mWindowWidth; j++) {
+						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int coeff = mG7Coeffs[i * mWindowHeight + j]
+								* mHCoeffs[Math.abs(center - val)];
+						sum += val * coeff;
+						norm += coeff;
+					}
+				}
+				break;
+			}
+			sum /= norm;
+			return new Byte((byte) (center - sum));
 		}
 
 		public Byte getGaussian() {
