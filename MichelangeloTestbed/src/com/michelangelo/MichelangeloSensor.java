@@ -19,7 +19,8 @@ public class MichelangeloSensor implements SensorEventListener {
 	
 	private final float[] mRotationMatrix = new float[16];
 	private final float[] RadialOrientation = new float[16];
-	public final float[] orientation = new float[3];
+	public final float[] Deg_orientation = new float[3];
+	public final float[] Rad_orientation = new float[3];
 	
 	public void onCreate(Context ActivityContext) {
 		
@@ -37,8 +38,8 @@ public class MichelangeloSensor implements SensorEventListener {
 	
 	private void start() {
         // enable our sensor when the activity is resumed, ask for
-        // 500 ms updates.
-        mSensorManager.registerListener(this, mSensor, 500000);
+        // 125 ms updates.
+        mSensorManager.registerListener(this, mSensor, 125000);
     }
 	
     private void stop() {
@@ -78,11 +79,11 @@ public class MichelangeloSensor implements SensorEventListener {
             //SensorManager.remapCoordinateSystem(mRotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, RadialOrientation);
             	
             
-            SensorManager.getOrientation(mRotationMatrix, orientation);
+            SensorManager.getOrientation(mRotationMatrix, Rad_orientation);
             
-            orientation[0] = (int)(orientation[0]*DEG);
-            orientation[1] = (int)(orientation[1]*DEG+90);
-            orientation[2] = (int)(orientation[2]*DEG);
+            Deg_orientation[0] = (int)(Rad_orientation[0]*DEG);
+            Deg_orientation[1] = (int)(Rad_orientation[1]*DEG+90);
+            Deg_orientation[2] = (int)(Rad_orientation[2]*DEG);
         }			
 	}
 }

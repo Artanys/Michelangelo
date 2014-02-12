@@ -13,6 +13,9 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
@@ -46,6 +49,10 @@ public class MichelangeloCamera extends MichelangeloUI {
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
 	
+		//View circleView = (View) findViewById(R.id.circle);
+		
+		//circleView
+		
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(
 		    new View.OnClickListener() {
@@ -57,7 +64,7 @@ public class MichelangeloCamera extends MichelangeloUI {
 		        }
 		    }
 		);
-		
+		captureButton.bringToFront();
 		FrameLayout cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
 		cameraPreview.setOnClickListener(
 			new View.OnClickListener() {
@@ -76,11 +83,17 @@ public class MichelangeloCamera extends MichelangeloUI {
 				handler.post(new Runnable() {
 					public void run() {
 						TextView tv = (TextView) findViewById(R.id.button_capture);
-				        tv.setText("yaw: " + mSensor.orientation[0] + " pitch: " + mSensor.orientation[1] + " roll: " + mSensor.orientation[2]);
+						AngledLineView alv = (AngledLineView) findViewById(R.id.circleLine);
+						CenteredAngledLineView horizonLine = (CenteredAngledLineView) findViewById(R.id.horizonLine);
+						CenteredAngledLineView pitchLine = (CenteredAngledLineView) findViewById(R.id.pitchLine);
+						alv.setAngle(mSensor.Rad_orientation[0]);
+						pitchLine.setAngle(mSensor.Rad_orientation[1]);
+						horizonLine.setAngle(mSensor.Rad_orientation[2]);
+				        tv.setText("yaw: " + mSensor.Deg_orientation[0] + " pitch: " + mSensor.Deg_orientation[1] + " roll: " + mSensor.Deg_orientation[2]);
 					}
 				});
 			}
-		},1000,1000);
+		},125,125);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setDisplayShowHomeEnabled(true);
@@ -320,9 +333,10 @@ public class MichelangeloCamera extends MichelangeloUI {
 			}
 	        mPreview = new CameraPreview(this, mCamera);
 	        preview.addView(mPreview, 1);
-	        LinearLayout button_frame = (LinearLayout) findViewById(R.id.fullscreen_content_controls);
-	        preview.removeView(button_frame);
-	        preview.addView(button_frame);
+	        //LinearLayout button_frame = (LinearLayout) findViewById(R.id.fullscreen_content_controls);
+	        //preview.removeView(button_frame);
+	        //preview.addView(button_frame);
+	        preview.invalidate();
 			mCamera.startPreview();
 		}
 	}
@@ -346,5 +360,17 @@ public class MichelangeloCamera extends MichelangeloUI {
     	// User cancelled the dialog, don't update/start over
         
     }
-    
+
+	public class CircleView extends View {
+		Paint paint = new Paint();
+		public CircleView(Context context) {
+			super(context);
+			paint.setColor(Color.WHITE);
+		}
+	
+	    public void onDraw(Canvas canvas) {
+	            canvas.drawLine(0, 0, 20, 20, paint);
+	            canvas.drawLine(20, 0, 0, 20, paint);
+	    }
+	}
 }

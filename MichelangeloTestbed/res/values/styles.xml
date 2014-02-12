@@ -34,7 +34,20 @@
     </style>
 
     <style name="ButtonBarButton" />
+        
     
+    <style name="TransparentStyle" parent="android:Theme">
+	    <item name="android:layout_width">wrap_content</item>    
+	    <item name="android:layout_height">wrap_content</item>
+	    <item name="android:background">@android:color/transparent</item>
+	</style>
+    
+    <style name="OverlayStyle" parent="android:Theme">
+	    <item name="android:layout_width">wrap_content</item>    
+	    <item name="android:layout_height">wrap_content</item>
+	    <item name="android:background">#80111111</item>
+	</style>
+	
     <style name="GenericProgressBackground" parent="android:Theme">
 	    <item name="android:layout_width">fill_parent</item>    
 	    <item name="android:layout_height">fill_parent</item>

@@ -27,6 +27,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int blue=0x7f040003;
         public static final int burnt_orange=0x7f040002;
         public static final int transparent=0x7f040004;
+        public static final int transparent_black=0x7f040005;
         public static final int transparent_blue=0x7f040001;
     }
     public static final class dimen {
@@ -58,23 +59,31 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int selector=0x7f02000f;
     }
     public static final class id {
-        public static final int action_delete=0x7f0a0010;
-        public static final int action_settings=0x7f0a000e;
-        public static final int action_share=0x7f0a000f;
+        public static final int action_delete=0x7f0a0018;
+        public static final int action_settings=0x7f0a0016;
+        public static final int action_share=0x7f0a0017;
         public static final int button_capture=0x7f0a0002;
         public static final int camera_preview=0x7f0a0000;
-        public static final int content_frame=0x7f0a0007;
-        public static final int fullscreen_content=0x7f0a0005;
+        public static final int circle=0x7f0a0004;
+        public static final int circleLine=0x7f0a0005;
+        public static final int content_frame=0x7f0a000f;
+        public static final int fullscreen_content=0x7f0a000d;
         public static final int fullscreen_content_controls=0x7f0a0001;
-        public static final int gridview=0x7f0a0004;
-        public static final int loadingPanel=0x7f0a0003;
-        public static final int main_drawer_layout=0x7f0a0006;
-        public static final int main_left_drawer=0x7f0a0008;
-        public static final int seekBar=0x7f0a000d;
-        public static final int textView1=0x7f0a0009;
-        public static final int textView2=0x7f0a000a;
-        public static final int textView3=0x7f0a000b;
-        public static final int textView4=0x7f0a000c;
+        public static final int gridview=0x7f0a000c;
+        public static final int horizonLine=0x7f0a0009;
+        public static final int loadingPanel=0x7f0a000b;
+        public static final int main_drawer_layout=0x7f0a000e;
+        public static final int main_left_drawer=0x7f0a0010;
+        public static final int overlay=0x7f0a0003;
+        public static final int pitch=0x7f0a0008;
+        public static final int pitchLine=0x7f0a0007;
+        public static final int roll=0x7f0a000a;
+        public static final int seekBar=0x7f0a0015;
+        public static final int textView1=0x7f0a0011;
+        public static final int textView2=0x7f0a0012;
+        public static final int textView3=0x7f0a0013;
+        public static final int textView4=0x7f0a0014;
+        public static final int yaw=0x7f0a0006;
     }
     public static final class layout {
         public static final int activity_michelangelo_about=0x7f030000;
@@ -113,6 +122,8 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int gallery_item_desc=0x7f06001a;
         public static final int hello_blank_fragment=0x7f06000f;
         public static final int hello_world=0x7f060002;
+        public static final int pitch_label=0x7f060023;
+        public static final int roll_label=0x7f060022;
         public static final int saved_setting_num_images=0x7f060013;
         public static final int sensor_output=0x7f060021;
         public static final int setting_modelviewer_desc=0x7f06001c;
@@ -129,6 +140,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int title_dialog_capture_settings=0x7f060014;
         public static final int title_dialog_confirm_delete=0x7f06001d;
         public static final int title_dialog_modelviewer_settings=0x7f06001b;
+        public static final int yaw_label=0x7f060024;
     }
     public static final class style {
         /** 
@@ -162,12 +174,14 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int AppTheme=0x7f080001;
         public static final int ButtonBar=0x7f080003;
         public static final int ButtonBarButton=0x7f080004;
-        public static final int FullscreenActionBarStyle=0x7f080009;
+        public static final int FullscreenActionBarStyle=0x7f08000b;
         public static final int FullscreenTheme=0x7f080002;
-        public static final int GenericProgressBackground=0x7f080005;
-        public static final int GenericProgressIndicator=0x7f080006;
-        public static final int drawer_layout_style=0x7f080007;
-        public static final int left_drawer_style=0x7f080008;
+        public static final int GenericProgressBackground=0x7f080007;
+        public static final int GenericProgressIndicator=0x7f080008;
+        public static final int OverlayStyle=0x7f080006;
+        public static final int TransparentStyle=0x7f080005;
+        public static final int drawer_layout_style=0x7f080009;
+        public static final int left_drawer_style=0x7f08000a;
     }
     public static final class styleable {
         /** 

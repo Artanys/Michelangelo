@@ -52,5 +52,8 @@
     <string name="confirm_delete_model">Delete this model?</string>
     <string name="title_activity_michelangelo_ui">MichelangeloUI</string>
     <string name="sensor_output">roll: , pitch: , yaw: </string>
+    <string name="roll_label">Roll</string>
+    <string name="pitch_label">Pitch</string>
+    <string name="yaw_label">Yaw</string>
 
 </resources>
