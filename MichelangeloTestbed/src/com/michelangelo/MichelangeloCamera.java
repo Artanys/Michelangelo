@@ -303,6 +303,40 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 		return mediaFile;
 	}
+	
+
+	/** Create a File for saving an image or video */
+	public static ArrayList<File> getMediaFiles() {
+		// To be safe, you should check that the SDCard is mounted
+		// using Environment.getExternalStorageState() before doing this.
+
+		ArrayList<File> matchingFiles = new ArrayList<File>();
+		
+		File mediaStorageDir = new File(
+				Environment
+						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+				"Michelangelo");
+		// This location works best if you want the created images to be shared
+		// between applications and persist after your app has been uninstalled.
+
+		// Create the storage directory if it does not exist
+		if (!mediaStorageDir.exists()) {
+			Log.d("MichelangeloCamera", "media Directory doesn't exist!");
+			return matchingFiles;		
+		}
+
+
+	    File[] files = mediaStorageDir.listFiles();
+
+	    for (File file : files) {
+	    	if(file.getName().endsWith(".jpg")){
+	    		matchingFiles.add(file);
+	        }
+	    }
+
+		return matchingFiles;
+	}
+	
 
 	public static void setCameraDisplayOrientation(Activity activity,
 			int cameraId, android.hardware.Camera camera) {
