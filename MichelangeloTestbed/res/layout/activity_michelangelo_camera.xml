@@ -6,14 +6,18 @@
     android:layout_height="match_parent"
     android:background="#000000"
     tools:context=".MichelangeloCamera"
-    android:visibility="visible"
-    android:id="@+id/camera_preview" >
+    android:id="@+id/camera_window" >
 
     <!--
          This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows.
     -->    
-	    
+	
+	<SurfaceView
+	    android:id="@+id/camera_preview"
+	    android:layout_width="match_parent"
+    	android:layout_height="match_parent"
+    	android:background="#000000" />    
 	
 	<LinearLayout
 	    android:id="@+id/fullscreen_content_controls"
