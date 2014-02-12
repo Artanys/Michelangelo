@@ -44,11 +44,12 @@
         android:id="@+id/overlay"
         style="@style/TransparentStyle"
         android:layout_marginTop="?android:attr/actionBarSize"
+        android:paddingTop="15dp"
         android:layout_marginRight="10dp"
         android:layout_marginLeft="10dp">
         <com.michelangelo.CircleView
             android:id="@+id/circle"
-            android:layout_margin="10dp"
+        	style="@style/OverlayStyle"
             android:layout_width="40dp"
             android:layout_height="40dp"/>
         <com.michelangelo.AngledLineView
@@ -61,43 +62,51 @@
             android:layout_alignBottom="@id/circle"/>"
     	<TextView
 	        android:id="@+id/yaw"
+        	style="@style/OverlayStyle"
 	        android:layout_width="0dp"
 	        android:layout_height="wrap_content"
 	        android:layout_below="@id/circle"
 	        android:layout_alignLeft="@id/circle"
 	        android:layout_alignRight="@id/circle"
 	        android:gravity="center_horizontal"
+	        android:textSize="16sp"
 	        android:text="@string/yaw_label"/>   
 	        
     	
         <com.michelangelo.CenteredAngledLineView
             android:id="@+id/pitchLine"
+        	style="@style/OverlayStyle"
 	        android:layout_centerHorizontal="true"
-            android:layout_margin="10dp"
 	        android:layout_width="40dp"
 	        android:layout_height="40dp"/>	
     	<TextView
 	        android:id="@+id/pitch"
+        	style="@style/OverlayStyle"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:layout_centerHorizontal="true"
+	        android:layout_alignLeft="@id/pitchLine"
+	        android:layout_alignRight="@id/pitchLine"
 	        android:layout_below="@id/pitchLine"
+	        android:textSize="16sp"
 	        android:text="@string/pitch_label"/>
     	
         <com.michelangelo.CenteredAngledLineView
             android:id="@+id/horizonLine"
+        	style="@style/OverlayStyle"
 			android:layout_alignParentRight="true"
-            android:layout_margin="10dp"
 	        android:layout_width="40dp"
 	        android:layout_height="40dp"/>	    	
     	<TextView
 	        android:id="@+id/roll"
+        	style="@style/OverlayStyle"
 	        android:layout_width="0dp"
 	        android:layout_height="wrap_content"
 			android:layout_alignLeft="@id/horizonLine"
-			android:layout_alignRight="@id/horizonLine"
+			android:layout_alignParentRight="true"
 	        android:layout_below="@id/horizonLine"
 	        android:gravity="center"
+	        android:textSize="16sp"
 	        android:text="@string/roll_label"/>
     </RelativeLayout>
     

@@ -14,16 +14,16 @@ public class CircleView extends View {
 		super(context, attrs);
 		paint.setColor(Color.LTGRAY);
 		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth((float) 1.5);
+		paint.setStrokeWidth((float) 2);
 	}
 	
 	public CircleView(Context context) {
 		super(context);
 		paint.setColor(Color.WHITE);
 		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth((float) 1.5);
+		paint.setStrokeWidth((float) 2);
 	}
 	protected void onDraw(Canvas canvas) {
-		canvas.drawCircle(this.getWidth()/2, this.getHeight()/2, this.getWidth()/2, paint);
+		canvas.drawCircle(this.getWidth()/2, this.getHeight()/2, (float) (this.getWidth()/2 - 1), paint);
 	}
 }

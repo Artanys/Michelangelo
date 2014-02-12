@@ -17,6 +17,7 @@ public class AngledLineView extends View {
 	public AngledLineView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		paint.setColor(Color.LTGRAY);
+		paint.setStrokeWidth((float) 2);
 		//paint.setStyle(Paint.Style.STROKE);
 		//paint.setStrokeWidth((float) 1.5);
 	}
@@ -24,6 +25,7 @@ public class AngledLineView extends View {
 	public AngledLineView(Context context) {
 		super(context);
 		paint.setColor(Color.LTGRAY);
+		paint.setStrokeWidth((float) 2);
 		//paint.setStyle(Paint.Style.STROKE);
 		//paint.setStrokeWidth((float) 1.5);
 	}
