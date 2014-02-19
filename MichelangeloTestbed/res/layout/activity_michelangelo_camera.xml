@@ -14,11 +14,11 @@
          android:fitsSystemWindows.
     -->    
 	
-	<SurfaceView
-	    android:id="@+id/camera_preview"
+	<ImageView
+	    android:id="@+id/last_image"
 	    android:layout_width="match_parent"
-    	android:layout_height="match_parent"
-    	android:background="#000000" />    
+	    android:layout_height="match_parent"
+	    android:alpha=".45" />
 
     <RelativeLayout
         android:id="@+id/overlay"
@@ -101,8 +101,7 @@
             android:text="@string/dummy_button"
             android:visibility="visible"   
             android:layout_gravity="bottom|center_horizontal"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent" />
+            android:orientation="horizontal" />
         
         <com.michelangelo.RectangleView
             android:id="@+id/guideBox"
@@ -114,13 +113,4 @@
 
     </RelativeLayout>
     
-    <RelativeLayout
-        android:id="@+id/loadingPanel"
-        style="@style/GenericProgressBackground"
-        android:visibility="gone" >
-
-	    <ProgressBar
-	        style="@style/GenericProgressIndicator"/>
-	    
-	</RelativeLayout>
 </FrameLayout>
