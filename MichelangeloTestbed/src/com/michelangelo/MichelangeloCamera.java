@@ -240,8 +240,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			int bmWidth = bitmap.getWidth();
 			int bmHeight = bitmap.getHeight();
 
-			byte[] yv12 = getYV12(bmWidth, bmHeight, bitmap);
-			byte[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
+			int[] yv12 = getYV12(bmWidth, bmHeight, bitmap);
+			int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
 
 			// Debug.startMethodTracing();
 
@@ -399,21 +399,19 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		}
 	}
 
-	private byte[] getYV12(int inputWidth, int inputHeight, Bitmap scaled) {
+	private int[] getYV12(int inputWidth, int inputHeight, Bitmap scaled) {
 
 		int[] argb = new int[inputWidth * inputHeight];
 
 		scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
-		byte[] yVals = new byte[inputWidth * inputHeight];
-		encodeYV12(yVals, argb, inputWidth, inputHeight);
+		encodeYV12(argb, inputWidth, inputHeight);
 
 		scaled.recycle();
 
-		return yVals;
+		return argb;
 	}
 
-	private void encodeYV12(byte[] yuv420sp, int[] argb, int width, int height) {
-		int yIndex = 0;
+	private void encodeYV12(int[] argb, int width, int height) {
 		int R, G, B, Y;
 		int index = 0;
 		for (int j = 0; j < height; j++) {
@@ -425,15 +423,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				// well known RGB to YUV algorithm
 				Y = ((66 * R + 129 * G + 25 * B + 128) >> 8) + 16;
 
-				yuv420sp[yIndex++] = (byte) ((Y < 0) ? 0
-						: ((Y > 255) ? 255 : Y));
-				index++;
+				argb[index++] = ((Y < 0) ? 0 : ((Y > 255) ? 255 : Y));
 			}
 		}
 	}
 
-	private byte[][] getY2DfromYV12(byte[] yv12, int width, int height) {
-		byte[][] y2D = new byte[height][width];
+	private int[][] getY2DfromYV12(int[] yv12, int width, int height) {
+		int[][] y2D = new int[height][width];
 		for (int i = 0; i < height; i++) {
 			int startIndex = i * width;
 			System.arraycopy(yv12, startIndex, y2D[i], 0, width);
