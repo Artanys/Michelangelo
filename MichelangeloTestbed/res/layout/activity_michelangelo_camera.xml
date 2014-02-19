@@ -1,6 +1,7 @@
 <!-- The main content view -->
 <FrameLayout 
-	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:android="http://schemas.android.com/apk/res/android"	
+    xmlns:custom="http://schemas.android.com/apk/res/com.michelangelo"
 	xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,39 +19,16 @@
 	    android:layout_width="match_parent"
     	android:layout_height="match_parent"
     	android:background="#000000" />    
-	
-	<LinearLayout
-	    android:id="@+id/fullscreen_content_controls"
-	    style="?buttonBarStyle"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_gravity="bottom|center_horizontal"
-	    android:orientation="horizontal"
-	    android:visibility="visible"
-	    tools:ignore="UselessParent" >
-
-        <Button
-            android:id="@+id/button_capture"
-            style="?buttonBarButtonStyle"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/burnt_orange"
-            android:text="@string/dummy_button"
-            android:visibility="visible"   
-            android:layout_gravity="bottom|center_horizontal"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent" />
-
-    </LinearLayout>
-
 
     <RelativeLayout
         android:id="@+id/overlay"
         style="@style/TransparentStyle"
-        android:layout_marginTop="?android:attr/actionBarSize"
-        android:paddingTop="15dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:layout_marginLeft="10dp">
+        android:layout_marginTop="?android:attr/actionBarSize"
+        android:paddingTop="15dp" >
+
         <com.michelangelo.CircleView
             android:id="@+id/circle"
         	style="@style/OverlayStyle"
@@ -112,6 +90,28 @@
 	        android:gravity="center"
 	        android:textSize="16sp"
 	        android:text="@string/roll_label"/>
+        
+        <Button
+            android:id="@+id/button_capture"
+            style="?buttonBarButtonStyle"
+            android:layout_alignParentBottom="true"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/burnt_orange"
+            android:text="@string/dummy_button"
+            android:visibility="visible"   
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="horizontal"
+            tools:ignore="UselessParent" />
+        
+        <com.michelangelo.RectangleView
+            android:id="@+id/guideBox"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_margin="20dp"
+            android:layout_below="@id/yaw"
+            android:layout_above="@id/button_capture"/>
+
     </RelativeLayout>
     
     <RelativeLayout

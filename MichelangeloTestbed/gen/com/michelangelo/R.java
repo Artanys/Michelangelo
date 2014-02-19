@@ -13,6 +13,14 @@ public final class R {
         public static final int menu_options_modelviewer=0x7f070001;
     }
     public static final class attr {
+        /** <p>Must be a floating point value, such as "<code>1.2</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int angle=0x7f010002;
         /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
 or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
          */
@@ -62,29 +70,29 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int action_delete=0x7f0a0019;
         public static final int action_settings=0x7f0a0017;
         public static final int action_share=0x7f0a0018;
-        public static final int button_capture=0x7f0a0003;
+        public static final int button_capture=0x7f0a000a;
         public static final int camera_preview=0x7f0a0001;
         public static final int camera_window=0x7f0a0000;
-        public static final int circle=0x7f0a0005;
-        public static final int circleLine=0x7f0a0006;
+        public static final int circle=0x7f0a0003;
+        public static final int circleLine=0x7f0a0004;
         public static final int content_frame=0x7f0a0010;
         public static final int fullscreen_content=0x7f0a000e;
-        public static final int fullscreen_content_controls=0x7f0a0002;
         public static final int gridview=0x7f0a000d;
-        public static final int horizonLine=0x7f0a000a;
+        public static final int guideBox=0x7f0a000b;
+        public static final int horizonLine=0x7f0a0008;
         public static final int loadingPanel=0x7f0a000c;
         public static final int main_drawer_layout=0x7f0a000f;
         public static final int main_left_drawer=0x7f0a0011;
-        public static final int overlay=0x7f0a0004;
-        public static final int pitch=0x7f0a0009;
-        public static final int pitchLine=0x7f0a0008;
-        public static final int roll=0x7f0a000b;
+        public static final int overlay=0x7f0a0002;
+        public static final int pitch=0x7f0a0007;
+        public static final int pitchLine=0x7f0a0006;
+        public static final int roll=0x7f0a0009;
         public static final int seekBar=0x7f0a0016;
         public static final int textView1=0x7f0a0012;
         public static final int textView2=0x7f0a0013;
         public static final int textView3=0x7f0a0014;
         public static final int textView4=0x7f0a0015;
-        public static final int yaw=0x7f0a0007;
+        public static final int yaw=0x7f0a0005;
     }
     public static final class layout {
         public static final int activity_michelangelo_about=0x7f030000;
@@ -225,5 +233,32 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
           @attr name com.michelangelo:buttonBarStyle
         */
         public static final int ButtonBarContainerTheme_buttonBarStyle = 0;
+        /** Attributes that can be used with a LineView.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #LineView_angle com.michelangelo:angle}</code></td><td></td></tr>
+           </table>
+           @see #LineView_angle
+         */
+        public static final int[] LineView = {
+            0x7f010002
+        };
+        /**
+          <p>This symbol is the offset where the {@link com.michelangelo.R.attr#angle}
+          attribute's value can be found in the {@link #LineView} array.
+
+
+          <p>Must be a floating point value, such as "<code>1.2</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name com.michelangelo:angle
+        */
+        public static final int LineView_angle = 0;
     };
 }

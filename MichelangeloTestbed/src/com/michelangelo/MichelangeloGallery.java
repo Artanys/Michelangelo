@@ -42,12 +42,6 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 		public void setChecked(boolean checked) {
             mChecked = checked;
             setBackgroundDrawable(checked ? getResources().getDrawable(R.color.blue) : null);
-            
-            /*if(checked){
-            	this.animate().rotationX(15);
-            } else {
-            	this.animate().rotationX(0);
-            }*/
         }
  
         public boolean isChecked() {
