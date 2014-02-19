@@ -10,7 +10,9 @@ import java.util.concurrent.Callable;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-public class DepthMapper implements Callable<Bitmap> {
+public class DepthMapper implements Callable<Bitmap> {	
+	public int PIXEL_PRODUCTS[][] = null;
+	
 	public enum IMAGE_POSITION {
 		LEFT, RIGHT
 	};
@@ -20,11 +22,11 @@ public class DepthMapper implements Callable<Bitmap> {
 	}
 
 	public enum FILTER_MODE {
-		MEDIAN, TRIMMED_MEAN, BILATERAL, BILSUB, GAUSSIAN, AVERAGE;
+		MEDIAN, TRIMMED_MEAN, BILATERAL, BILSUB, GAUSSIAN, AVERAGE, NONE;
 	}
 
 	private interface FilterFunc {
-		Byte filter(DepthMapper.Window window);
+		Integer filter(DepthMapper.Window window);
 	}
 
 	private EnumMap<FILTER_MODE, FilterFunc> filters = new EnumMap<FILTER_MODE, FilterFunc>(
@@ -38,42 +40,53 @@ public class DepthMapper implements Callable<Bitmap> {
 	private int mImgHeight = 0;
 	private int mWindowWidth = 0;
 	private int mWindowHeight = 0;
-	private FILTER_MODE mFilterMode = FILTER_MODE.MEDIAN;
+	private FILTER_MODE mFilterMode = FILTER_MODE.NONE;
 
 	public DepthMapper(byte[][] yDataLeft, int width, int height) {
 		if (yDataLeft != null) {
 			mYDataLeft = yDataLeft;
 			mImgWidth = width;
 			mImgHeight = height;
+			PIXEL_PRODUCTS = new int[256][256];
+			for ( int i = 0; i < 256; i ++ ) {
+				for ( int j = 0; j < 256; j ++ ) {
+					PIXEL_PRODUCTS[i][j] = i * j;
+				}
+			}
 		}
 		filters.put(FILTER_MODE.MEDIAN, new FilterFunc() {
-			public Byte filter(Window window) {
+			public Integer filter(Window window) {
 				return window.getMedian();
 			}
 		});
 		filters.put(FILTER_MODE.TRIMMED_MEAN, new FilterFunc() {
-			public Byte filter(DepthMapper.Window window) {
+			public Integer filter(DepthMapper.Window window) {
 				return window.getTrimmedMean();
 			}
 		});
 		filters.put(FILTER_MODE.BILATERAL, new FilterFunc() {
-			public Byte filter(Window window) {
+			public Integer filter(Window window) {
 				return window.getBilateral();
 			}
 		});
 		filters.put(FILTER_MODE.BILSUB, new FilterFunc() {
-			public Byte filter(Window window) {
+			public Integer filter(Window window) {
 				return window.getBilateralSub();
 			}
 		});
 		filters.put(FILTER_MODE.GAUSSIAN, new FilterFunc() {
-			public Byte filter(Window window) {
+			public Integer filter(Window window) {
 				return window.getGaussian();
 			}
 		});
 		filters.put(FILTER_MODE.AVERAGE, new FilterFunc() {
-			public Byte filter(Window window) {
+			public Integer filter(Window window) {
 				return window.getAverage();
+			}
+		});
+		filters.put(FILTER_MODE.NONE, new FilterFunc() {
+			public Integer filter(Window window) {
+				return window.getCenter();
 			}
 		});
 	}
@@ -91,9 +104,9 @@ public class DepthMapper implements Callable<Bitmap> {
 
 	private boolean generateDepthMap() {
 		if (readyToProcess()) {
-			filter(IMAGE_POSITION.LEFT, mFilterMode);
+			//filter(IMAGE_POSITION.LEFT, mFilterMode);
 			// filter(IMAGE_POSITION.RIGHT, mFilterMode);
-			// getDepth (IMAGE_POSITION.LEFT, IMAGE_POSITION.RIGHT);
+			getDepth (IMAGE_POSITION.RIGHT, IMAGE_POSITION.LEFT);
 			return true;
 		}
 		return false;
@@ -147,21 +160,67 @@ public class DepthMapper implements Callable<Bitmap> {
 		int j = 0;
 		do {
 			while (window.canShiftRight()) {
-				mResult[i][j++] = filters.get(filterMode).filter(window);
+				mResult[i][j++] = filters.get(filterMode).filter(window).byteValue();
 				window.shiftRight();
 			}
+			mResult[i][j] = filters.get(filterMode).filter(window).byteValue();
 			Log.w(TAG, "Filter Row " + i + " complete");
 			if (window.canShiftDown()) {
 				window.shiftDown();
 				i++;
 				while (window.canShiftLeft()) {
-					mResult[i][j--] = filters.get(filterMode).filter(window);
+					mResult[i][j--] = filters.get(filterMode).filter(window).byteValue();
 					window.shiftLeft();
 				}
+				mResult[i][j] = filters.get(filterMode).filter(window).byteValue();
 				Log.w(TAG, "Filter Row " + i + " complete");
 				if (window.canShiftDown()) {
 					window.shiftDown();
 					i++;
+				} else {
+					break;
+				}
+				// Debug.stopMethodTracing();
+			} else {
+				break;
+			}
+		} while (true);
+	}
+	
+	private void getDepth(IMAGE_POSITION img1Pos, IMAGE_POSITION img2Pos) {
+		// Debug.startMethodTracing("getDepth");
+		if (mResult == null)
+			mResult = new byte[mImgHeight][mImgWidth];
+		Window window = getWindow(img1Pos, 0, 0);
+		Window window2 = getWindow(img2Pos, 0, 0);
+
+		int i = 0;
+		int j = 0;
+		do {
+			while (window.canShiftRight()) {
+				mResult[i][j] = window.getNCC(window2, j).byteValue();
+				window.shiftRight();
+				j++;
+				window2.reset(j, i);
+			}
+			mResult[i][j] = window.getNCC(window2, j).byteValue();
+			Log.w(TAG, "Filter Row " + i + " complete");
+			if (window.canShiftDown()) {
+				window.shiftDown();
+				i++;
+				window2.reset(j, i);
+				while (window.canShiftLeft()) {
+					mResult[i][j] = window.getNCC(window2, j).byteValue();
+					window.shiftLeft();
+					j--;
+					window2.reset(j, i);
+				}
+				mResult[i][j] = window.getNCC(window2, j).byteValue();
+				Log.w(TAG, "Filter Row " + i + " complete");
+				if (window.canShiftDown()) {
+					window.shiftDown();
+					i++;
+					window2.reset(0, i);
 				} else {
 					break;
 				}
@@ -244,11 +303,12 @@ public class DepthMapper implements Callable<Bitmap> {
 	}
 
 	private class Window {
-		private ArrayList<ArrayList<Byte>> mWindow = null;
-		private ArrayList<Byte> mSortedWindow = null;
+		private ArrayList<ArrayList<Integer>> mWindow = null;
+		private ArrayList<ArrayList<Integer>> mWindowSq = null;
+		private ArrayList<Integer> mSortedWindow = null;
 		private byte[][] mData = null;
-		private PriorityQueue<Byte> maxHeap = null;
-		private PriorityQueue<Byte> minHeap = null;
+		private PriorityQueue<Integer> maxHeap = null;
+		private PriorityQueue<Integer> minHeap = null;
 		private int mWindowWidth;
 		private int mWindowHeight;
 		private int mImgWidth;
@@ -259,7 +319,8 @@ public class DepthMapper implements Callable<Bitmap> {
 		private int mTopOffset;
 		private int mNumPixels;
 		private int mSum;
-		private FILTER_MODE mFilterMode = FILTER_MODE.MEDIAN;
+		private int mSumSq;
+		private FILTER_MODE mFilterMode = FILTER_MODE.NONE;
 		private boolean mSorted = false;
 
 		// Filter Coefficients
@@ -286,7 +347,8 @@ public class DepthMapper implements Callable<Bitmap> {
 
 		public Window(byte[][] yData, int imgWidth, int imgHeight, int posX,
 				int posY, int windowWidth, int windowHeight) {
-			mWindow = new ArrayList<ArrayList<Byte>>();
+			mWindow = new ArrayList<ArrayList<Integer>>();
+			mWindowSq = new ArrayList<ArrayList<Integer>>();
 			mData = yData;
 			mImgWidth = imgWidth;
 			mImgHeight = imgHeight;
@@ -298,15 +360,15 @@ public class DepthMapper implements Callable<Bitmap> {
 			mTopOffset = windowHeight / 2;
 			mNumPixels = windowHeight * windowWidth;
 
-			maxHeap = new PriorityQueue<Byte>((windowWidth * windowHeight) / 2,
-					new Comparator<Byte>() {
-						public int compare(Byte left, Byte right) {
+			maxHeap = new PriorityQueue<Integer>(mNumPixels / 2,
+					new Comparator<Integer>() {
+						public int compare(Integer left, Integer right) {
 							return right.compareTo(left);
 						}
 					});
-			minHeap = new PriorityQueue<Byte>((windowWidth * windowHeight) / 2,
-					new Comparator<Byte>() {
-						public int compare(Byte left, Byte right) {
+			minHeap = new PriorityQueue<Integer>(mNumPixels / 2,
+					new Comparator<Integer>() {
+						public int compare(Integer left, Integer right) {
 							return left.compareTo(right);
 						}
 					});
@@ -314,7 +376,8 @@ public class DepthMapper implements Callable<Bitmap> {
 			int mTopOffset = windowHeight / 2;
 			int mLeftOffset = windowWidth / 2;
 			for (int i = -mTopOffset; i <= mTopOffset; i++) {
-				ArrayList<Byte> row = new ArrayList<Byte>(windowWidth);
+				ArrayList<Integer> row = new ArrayList<Integer>(windowWidth);
+				ArrayList<Integer> rowSq = new ArrayList<Integer>(windowWidth);
 				for (int j = -mLeftOffset; j <= mLeftOffset; j++) {
 					byte val;
 					int yIndex = posY + i;
@@ -358,14 +421,91 @@ public class DepthMapper implements Callable<Bitmap> {
 							val = 0;
 						} while (false);
 					}
-					row.add(val);
+					int intVal = (int) val & 0xff;
+					row.add(intVal);
+					rowSq.add(PIXEL_PRODUCTS[intVal][intVal]);
 				}
 				mWindow.add(row);
+				mWindowSq.add(rowSq);
 			}
 			mSortedWindow = getSortedWindow();
-			for (Byte b : mSortedWindow) {
+			for (Integer b : mSortedWindow) {
 				addToMedianHeap(b);
-				mSum += (int) b & 0xff;
+				mSum += b;
+				mSumSq += PIXEL_PRODUCTS[b][b];
+			}
+			mSorted = true;
+		}
+		
+		public void reset ( int posX, int posY ) {
+			mPosX = posX;
+			mPosY = posY;
+
+			mWindow.clear();
+			mWindowSq.clear();
+			maxHeap.clear();
+			minHeap.clear();
+			
+			for (int i = -mTopOffset; i <= mTopOffset; i++) {
+				ArrayList<Integer> row = new ArrayList<Integer>(mWindowWidth);
+				ArrayList<Integer> rowSq = new ArrayList<Integer>(mWindowWidth);
+				for (int j = -mLeftOffset; j <= mLeftOffset; j++) {
+					byte val;
+					int yIndex = posY + i;
+					int xIndex = posX + j;
+					try {
+						val = mData[yIndex][xIndex];
+					} catch (ArrayIndexOutOfBoundsException e) {
+						do {
+							if (yIndex < 0 && xIndex < 0) {
+								val = mData[0][0];
+								break;
+							}
+							if (yIndex < 0 && xIndex >= mImgWidth) {
+								val = mData[0][mImgWidth - 1];
+								break;
+							}
+							if (yIndex >= mImgHeight && xIndex < 0) {
+								val = mData[mImgHeight - 1][0];
+								break;
+							}
+							if (yIndex >= mImgHeight && xIndex >= mImgWidth) {
+								val = mData[mImgHeight - 1][mImgWidth - 1];
+								break;
+							}
+							if (yIndex < 0) {
+								val = mData[0][xIndex];
+								break;
+							}
+							if (yIndex >= mImgHeight) {
+								val = mData[mImgHeight - 1][xIndex];
+								break;
+							}
+							if (xIndex < 0) {
+								val = mData[yIndex][0];
+								break;
+							}
+							if (xIndex >= mImgWidth) {
+								val = mData[yIndex][mImgWidth - 1];
+								break;
+							}
+							val = 0;
+						} while (false);
+					}
+					int intVal = (int) val & 0xff;
+					row.add(intVal);
+					rowSq.add(PIXEL_PRODUCTS[intVal][intVal]);
+				}
+				mWindow.add(row);
+				mWindowSq.add(rowSq);
+			}
+			mSortedWindow = getSortedWindow();
+			mSum = 0;
+			mSumSq = 0;
+			for (Integer b : mSortedWindow) {
+				addToMedianHeap(b);
+				mSum += b;
+				mSumSq += PIXEL_PRODUCTS[b][b];
 			}
 			mSorted = true;
 		}
@@ -404,173 +544,237 @@ public class DepthMapper implements Callable<Bitmap> {
 
 		public void shiftRight() {
 			for (int i = 0; i < mWindowHeight; i++) {
-				byte val;
+				int val, valSq;
+				ArrayList<Integer> row = mWindow.get(i);
+				ArrayList<Integer> rowSq = mWindowSq.get(i);
 				try {
-					val = mData[mPosY + i - mTopOffset][mPosX + mWindowWidth
-							- mLeftOffset];
+					val = (int) mData[mPosY + i - mTopOffset][mPosX + mWindowWidth
+							- mLeftOffset] & 0xff;
 				} catch (ArrayIndexOutOfBoundsException e) {
-					val = mWindow.get(i).get(mWindowWidth - 1);
+					val = row.get(mWindowWidth - 1);
 				}
-				Byte removed = mWindow.get(i).remove(0);
-				mSortedWindow.remove(removed);
-				mWindow.get(i).add(val);
-				mSortedWindow.add(val);
+				valSq = PIXEL_PRODUCTS[val][val];
+				Integer removed = row.remove(0);
+				Integer removedSq = rowSq.remove(0);
+				row.add(val);
+				rowSq.add(valSq);
 				switch (mFilterMode) {
+				case NONE:
+					mSumSq -= removedSq;
+					mSumSq += valSq;
+					break;
+				case AVERAGE:
+					mSum -= removed;
+					mSum += val;
+					break;
+				case TRIMMED_MEAN:
+					mSortedWindow.remove(removed);
+					mSortedWindow.add(val);
+					mSorted = false;
+					break;
 				case MEDIAN:
 					removeFromMedianHeap(removed);
 					addToMedianHeap(val);
-					break;
-				case AVERAGE:
-					mSum -= (int) removed & 0xff;
-					mSum += (int) val & 0xff;
 					break;
 				default:
 					break;
 				}
 			}
-			mSorted = false;
 			mPosX++;
 		}
 
 		public void shiftLeft() {
 			for (int i = 0; i < mWindowHeight; i++) {
-				byte val;
+				int val, valSq;
+				ArrayList<Integer> row = mWindow.get(i);
+				ArrayList<Integer> rowSq = mWindowSq.get(i);
 				try {
-					val = mData[mPosY + i - mTopOffset][mPosX - 1 - mLeftOffset];
+					val = (int) mData[mPosY + i - mTopOffset][mPosX - 1 - mLeftOffset] & 0xff;
 				} catch (ArrayIndexOutOfBoundsException e) {
-					val = mWindow.get(i).get(0);
+					val = row.get(0);
 				}
-				Byte removed = mWindow.get(i).remove(mWindowWidth - 1);
-				mSortedWindow.remove(removed);
-				mWindow.get(i).add(0, val);
-				mSortedWindow.add(val);
+				valSq = PIXEL_PRODUCTS[val][val];
+				Integer removed = row.remove(mWindowWidth - 1);
+				Integer removedSq = rowSq.remove(mWindowWidth - 1);
+				row.add(0, val);
+				rowSq.add(0, valSq);
 				switch (mFilterMode) {
+				case NONE:
+					mSumSq -= removedSq;
+					mSumSq += valSq;
+					break;
+				case AVERAGE:
+					mSum -= removed;
+					mSum += val;
+					break;
+				case TRIMMED_MEAN:
+					mSortedWindow.remove(removed);
+					mSortedWindow.add(val);
+					mSorted = false;
+					break;
 				case MEDIAN:
 					removeFromMedianHeap(removed);
 					addToMedianHeap(val);
-					break;
-				case AVERAGE:
-					mSum -= (int) removed & 0xff;
-					mSum += (int) val & 0xff;
 					break;
 				default:
 					break;
 				}
 			}
-			mSorted = false;
 			mPosX--;
 		}
 
 		public void shiftDown() {
-			ArrayList<Byte> row = new ArrayList<Byte>(mWindowWidth);
+			ArrayList<Integer> row = new ArrayList<Integer>(mWindowWidth);
+			ArrayList<Integer> rowSq = new ArrayList<Integer>(mWindowWidth);
 
-			ArrayList<Byte> removedRow = mWindow.remove(0);
-			for (Byte removed : removedRow) {
-				mSortedWindow.remove(removed);
+			ArrayList<Integer> removedRow = mWindow.remove(0);
+			mWindowSq.remove(0);
+			for (Integer removed : removedRow) {
 				switch (mFilterMode) {
-				case MEDIAN:
-					removeFromMedianHeap(removed);
+				case NONE:
+					mSumSq -= PIXEL_PRODUCTS[removed][removed];
 					break;
 				case AVERAGE:
-					mSum -= (int) removed & 0xff;
+					mSum -= removed;
+					mSumSq -= PIXEL_PRODUCTS[removed][removed];
+					break;
+				case TRIMMED_MEAN:
+					mSortedWindow.remove(removed);					
+					break;
+				case MEDIAN:
+					removeFromMedianHeap(removed);
 					break;
 				default:
 					break;
 				}
 			}
 			for (int i = 0; i < mWindowWidth; i++) {
-				byte val;
+				int val, valSq;
 				try {
-					val = mData[mPosY + mWindowHeight - mTopOffset][mPosX + i
-							- mLeftOffset];
+					val = (int) mData[mPosY + mWindowHeight - mTopOffset][mPosX + i
+							- mLeftOffset] & 0xff;
 				} catch (ArrayIndexOutOfBoundsException e) {
 					val = removedRow.get(i);
 				}
+				valSq = PIXEL_PRODUCTS[val][val];
 				row.add(val);
-				mSortedWindow.add(val);
+				rowSq.add(valSq);
 				switch (mFilterMode) {
-				case MEDIAN:
-					addToMedianHeap(val);
+				case NONE:
+					mSumSq += valSq;
 					break;
 				case AVERAGE:
-					mSum += (int) val & 0xff;
+					mSum += val;
+					break;
+				case TRIMMED_MEAN:
+					mSortedWindow.add(val);
+					mSorted = false;
+					break;
+				case MEDIAN:
+					addToMedianHeap(val);
 					break;
 				default:
 					break;
 				}
 			}
 			mWindow.add(row);
-			mSorted = false;
+			mWindowSq.add(rowSq);
 			mPosY++;
 		}
 
 		public void shiftUp() {
-			ArrayList<Byte> row = new ArrayList<Byte>(mWindowWidth);
+			ArrayList<Integer> row = new ArrayList<Integer>(mWindowWidth);
+			ArrayList<Integer> rowSq = new ArrayList<Integer>(mWindowWidth);
 
-			ArrayList<Byte> removedRow = mWindow.remove(mWindowHeight - 1);
-			for (Byte removed : removedRow) {
-				mSortedWindow.remove(removed);
+			ArrayList<Integer> removedRow = mWindow.remove(mWindowHeight - 1);
+			mWindowSq.remove(mWindowHeight - 1);
+			for (Integer removed : removedRow) {
 				switch (mFilterMode) {
-				case MEDIAN:
-					removeFromMedianHeap(removed);
+				case NONE:
+					mSumSq -= PIXEL_PRODUCTS[removed][removed];
 					break;
 				case AVERAGE:
-					mSum -= (int) removed & 0xff;
+					mSum -= removed;
+					break;
+				case TRIMMED_MEAN:
+					mSortedWindow.remove(removed);			
+					break;
+				case MEDIAN:
+					removeFromMedianHeap(removed);
 					break;
 				default:
 					break;
 				}
 			}
 			for (int i = 0; i < mWindowWidth; i++) {
-				byte val;
+				int val, valSq;
 				try {
-					val = mData[mPosY - 1 - mTopOffset][mPosX + i - mLeftOffset];
+					val = (int) mData[mPosY - 1 - mTopOffset][mPosX + i - mLeftOffset] & 0xff;
 				} catch (ArrayIndexOutOfBoundsException e) {
 					val = removedRow.get(i);
 				}
+				valSq = PIXEL_PRODUCTS[val][val];
 				row.add(val);
-				mSortedWindow.add(val);
+				rowSq.add(valSq);
 				switch (mFilterMode) {
-				case MEDIAN:
-					addToMedianHeap(val);
+				case NONE:
+					mSumSq += valSq;
 					break;
 				case AVERAGE:
-					mSum += (int) val & 0xff;
+					mSum += val;
+					break;
+				case TRIMMED_MEAN:
+					mSortedWindow.add(val);
+					mSorted = false;				
+					break;
+				case MEDIAN:
+					addToMedianHeap(val);
 					break;
 				default:
 					break;
 				}
 			}
 			mWindow.add(0, row);
-			mSorted = false;
+			mWindowSq.add(0, rowSq);
 			mPosY--;
 		}
 
-		public Byte get(int x, int y) {
-			return new Byte(mWindow.get(y).get(x));
+		public Integer get(int x, int y) {
+			return mWindow.get(y).get(x);
+		}
+		
+		public Integer getSq(int x, int y) {
+			return mWindowSq.get(y).get(x);
+		}
+		
+		public int getSum() {
+			return mSum;
+		}
+		
+		public int getSumSq() {
+			return mSumSq;
 		}
 
-		public Byte getCenter() {
-			return new Byte(mWindow.get(mWindowHeight / 2)
-					.get(mWindowWidth / 2));
+		public Integer getCenter() {
+			return mWindow.get(mWindowHeight / 2).get(mWindowWidth / 2);
 		}
 
-		public ArrayList<Byte> getRow(int rowIndex) {
-			return new ArrayList<Byte>(mWindow.get(rowIndex));
+		public ArrayList<Integer> getRow(int rowIndex) {
+			return mWindow.get(rowIndex);
 		}
 
-		public ArrayList<Byte> getColumn(int columnIndex) {
-			ArrayList<Byte> byteColumn = new ArrayList<Byte>(mWindowHeight);
+		public ArrayList<Integer> getColumn(int columnIndex) {
+			ArrayList<Integer> intColumn = new ArrayList<Integer>(mWindowHeight);
 
 			for (int i = 0; i < mWindowHeight; i++) {
-				byteColumn.add(mWindow.get(i).get(columnIndex));
+				intColumn.add(mWindow.get(i).get(columnIndex));
 			}
 
-			return byteColumn;
+			return intColumn;
 		}
 
-		public ArrayList<Byte> getCorners() {
-			ArrayList<Byte> corners = new ArrayList<Byte>(4);
+		public ArrayList<Integer> getCorners() {
+			ArrayList<Integer> corners = new ArrayList<Integer>(4);
 
 			corners.add(mWindow.get(0).get(0));
 			corners.add(mWindow.get(0).get(mWindowWidth - 1));
@@ -580,9 +784,8 @@ public class DepthMapper implements Callable<Bitmap> {
 			return corners;
 		}
 
-		private ArrayList<Byte> getSortedWindow() {
-			ArrayList<Byte> sorted = new ArrayList<Byte>(mWindowWidth
-					* mWindowHeight);
+		private ArrayList<Integer> getSortedWindow() {
+			ArrayList<Integer> sorted = new ArrayList<Integer>(mNumPixels);
 
 			for (int i = 0; i < mWindowHeight; i++) {
 				sorted.addAll(mWindow.get(i));
@@ -593,7 +796,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			return sorted;
 		}
 
-		public void addToMedianHeap(Byte val) {
+		public void addToMedianHeap(Integer val) {
 			if (maxHeap.size() == minHeap.size()) {
 				if ((minHeap.peek() != null) && val > maxHeap.peek()) {
 					minHeap.offer(val);
@@ -614,7 +817,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			}
 		}
 
-		public boolean removeFromMedianHeap(Byte val) {
+		public boolean removeFromMedianHeap(Integer val) {
 			if (maxHeap.remove(val) || minHeap.remove(val)) {
 				if (maxHeap.size() > minHeap.size() + 1) {
 					minHeap.offer(maxHeap.poll());
@@ -626,7 +829,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			return false;
 		}
 
-		public Byte getMedian() {
+		public Integer getMedian() {
 			if (maxHeap.isEmpty())
 				return minHeap.peek();
 			else if (minHeap.isEmpty())
@@ -639,7 +842,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			}
 		}
 
-		public Byte getTrimmedMean() {
+		public Integer getTrimmedMean() {
 			if (!mSorted) {
 				Collections.sort(mSortedWindow);
 				mSorted = true;
@@ -649,23 +852,24 @@ public class DepthMapper implements Callable<Bitmap> {
 			int q = p / 2;
 			int sum = 0;
 			for (int i = q; i < numVals - q; i++) {
-				sum += (int) mSortedWindow.get(i) & 0xff;
+				sum += mSortedWindow.get(i);
 			}
 			sum /= (p + 1);
 
-			return new Byte((byte) sum);
+			return Integer.valueOf(sum);
 		}
 
-		public Byte getBilateral() {
+		public Integer getBilateral() {
 			int sum = 0;
 			int norm = 0;
-			int center = (int) getCenter() & 0xff;
+			int center = getCenter();
 
 			switch (mWindowHeight) {
 			case 3:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						int coeff = mG3Coeffs[i * mWindowHeight + j]
 								* mHCoeffs[Math.abs(center - val)];
 						sum += val * coeff;
@@ -675,8 +879,9 @@ public class DepthMapper implements Callable<Bitmap> {
 				break;
 			case 5:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						int coeff = mG5Coeffs[i * mWindowHeight + j]
 								* mHCoeffs[Math.abs(center - val)];
 						sum += val * coeff;
@@ -686,8 +891,9 @@ public class DepthMapper implements Callable<Bitmap> {
 				break;
 			case 7:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						int coeff = mG7Coeffs[i * mWindowHeight + j]
 								* mHCoeffs[Math.abs(center - val)];
 						sum += val * coeff;
@@ -697,19 +903,20 @@ public class DepthMapper implements Callable<Bitmap> {
 				break;
 			}
 			sum /= norm;
-			return new Byte((byte) sum);
+			return Integer.valueOf(sum);
 		}
 
-		public Byte getBilateralSub() {
+		public Integer getBilateralSub() {
 			int sum = 0;
 			int norm = 0;
-			int center = (int) getCenter() & 0xff;
+			int center = getCenter();
 
 			switch (mWindowHeight) {
 			case 3:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						int coeff = mG3Coeffs[i * mWindowHeight + j]
 								* mHCoeffs[Math.abs(center - val)];
 						sum += val * coeff;
@@ -719,8 +926,9 @@ public class DepthMapper implements Callable<Bitmap> {
 				break;
 			case 5:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						int coeff = mG5Coeffs[i * mWindowHeight + j]
 								* mHCoeffs[Math.abs(center - val)];
 						sum += val * coeff;
@@ -730,8 +938,9 @@ public class DepthMapper implements Callable<Bitmap> {
 				break;
 			case 7:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						int coeff = mG7Coeffs[i * mWindowHeight + j]
 								* mHCoeffs[Math.abs(center - val)];
 						sum += val * coeff;
@@ -741,45 +950,83 @@ public class DepthMapper implements Callable<Bitmap> {
 				break;
 			}
 			sum /= norm;
-			return new Byte((byte) (center - sum));
+			return Integer.valueOf(center - sum);
 		}
 
-		public Byte getGaussian() {
+		public Integer getGaussian() {
 			int sum = 0;
 
 			switch (mWindowHeight) {
 			case 3:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						sum += val * mG3Coeffs[i * mWindowHeight + j];
 					}
 				}
 				break;
 			case 5:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						sum += val * mG5Coeffs[i * mWindowHeight + j];
 					}
 				}
 				break;
 			case 7:
 				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
 					for (int j = 0; j < mWindowWidth; j++) {
-						int val = (int) mWindow.get(i).get(j) & 0xff;
+						int val = row.get(j);
 						sum += val * mG7Coeffs[i * mWindowHeight + j];
 					}
 				}
 				break;
 			}
 			sum = sum >> 10;
-			return new Byte((byte) sum);
+			return Integer.valueOf(sum);
 		}
 
-		public Byte getAverage() {
+		public Integer getAverage() {
 			int avg = mSum / mNumPixels;
-			return new Byte((byte) avg);
+			return Integer.valueOf(avg);
+		}
+		
+		public Integer getNCC( Window image2Window, int w1PosX ) {
+			long numSum = 0;
+			long denom = 0;
+			double sqrt = 0;
+			double corr = 0;
+			double maxCorr = 0;
+			int curIndex = 0;
+			int dispIndex = 0;
+			int maxDisp = mImgWidth / 5;
+			double scale = 255 / maxDisp;
+			
+			while ( image2Window.canShiftRight() && curIndex < maxDisp ) {
+				numSum = 0;
+				for (int i = 0; i < mWindowHeight; i++) {
+					ArrayList<Integer> row = mWindow.get(i);
+					ArrayList<Integer> row2 = image2Window.getRow(i);
+					for (int j = 0; j < mWindowWidth; j++) {
+						numSum += PIXEL_PRODUCTS[row.get(j)][row2.get(j)];
+					}
+				}
+				denom = (long) mSumSq * image2Window.getSumSq();
+				sqrt = Math.sqrt(denom);
+				corr = numSum / sqrt;
+				if ( corr > maxCorr ) {
+					maxCorr = corr;
+					dispIndex = curIndex;
+				}
+				image2Window.shiftRight();
+				curIndex ++;
+			}
+			
+			return Integer.valueOf((int)(dispIndex * scale));
+			
 		}
 	}
 }
