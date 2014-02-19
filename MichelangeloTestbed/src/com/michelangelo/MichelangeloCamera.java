@@ -24,6 +24,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -236,11 +237,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			findViewById(R.id.loadingPanel).setVisibility(View.GONE);
 			mPreview.setVisibility(View.VISIBLE);
 
-			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-			int bmWidth = bitmap.getWidth();
-			int bmHeight = bitmap.getHeight();
+			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);			
+			Matrix mat = new Matrix();
+			mat.postRotate(90);
+			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
+			
+			int bmWidth = bitmapRot.getWidth();
+			int bmHeight = bitmapRot.getHeight();
 
-			int[] yv12 = getYV12(bmWidth, bmHeight, bitmap);
+			int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
 			int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
 
 			// Debug.startMethodTracing();
