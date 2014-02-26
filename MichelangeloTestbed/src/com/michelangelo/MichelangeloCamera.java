@@ -40,7 +40,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class MichelangeloCamera extends MichelangeloUI implements
@@ -97,9 +96,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						AngledLineView alv = (AngledLineView) findViewById(R.id.circleLine);
 						CenteredAngledLineView horizonLine = (CenteredAngledLineView) findViewById(R.id.horizonLine);
 						CenteredAngledLineView pitchLine = (CenteredAngledLineView) findViewById(R.id.pitchLine);
+						TextView yawText = (TextView) findViewById(R.id.yaw_text);
+						TextView pitchText = (TextView) findViewById(R.id.pitch_text);
+						TextView rollText = (TextView) findViewById(R.id.roll_text);
 						alv.setAngle(mSensor.Rad_orientation[0]);
 						pitchLine.setAngle(mSensor.Rad_orientation[1]);
 						horizonLine.setAngle(mSensor.Rad_orientation[2]);
+						yawText.setText((int)mSensor.Deg_orientation[0] + "°");
+						pitchText.setText((int)mSensor.Deg_orientation[1] + "°");
+						rollText.setText((int)mSensor.Deg_orientation[2] + "°"); 
 					}
 				});
 			}
