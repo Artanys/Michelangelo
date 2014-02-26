@@ -121,8 +121,11 @@ public class MichelangeloUI extends Activity  implements CaptureSettingsFragment
 		case 3:
 			intent = new Intent ( this, MichelangeloAbout.class );
 			break;
+		
+		case 4:
+			intent = new Intent ( this, STLViewActivity.class);
+			break;
 		}
-
 	    // Highlight the selected item, update the title, and close the drawer
 	    //mDrawerList.setItemChecked(position, true);
 	    mDrawerLayout.closeDrawer(mDrawerList);
