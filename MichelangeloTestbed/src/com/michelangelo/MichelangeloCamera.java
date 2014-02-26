@@ -24,6 +24,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -40,6 +41,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MichelangeloCamera extends MichelangeloUI implements
@@ -56,6 +58,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private ArrayList<DepthMapper> mDMList = null;
 	private Handler mHandler = null;
 	private MichelangeloSensor mSensor;
+	private Bitmap bitmapLast;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -223,6 +226,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			Log.d(TAG, "Taking Picture");
+			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 			mPreview.setVisibility(View.GONE);
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
@@ -241,7 +245,16 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			}
 			mPreview.setVisibility(View.VISIBLE);
 
-			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);			
+			int width = lastImage.getWidth();
+			int height = lastImage.getHeight();
+			
+			Matrix mat = new Matrix();
+			mat.postRotate(90);
+			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
+			bitmapLast = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
+			lastImage.setImageBitmap(bitmapLast);
+			
 			int bmWidth = bitmap.getWidth();
 			int bmHeight = bitmap.getHeight();
 
@@ -269,7 +282,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
 			mDMList.add(dm);
-		}
+		}			
 	};
 
 	/** Create a File for saving an image or video */
@@ -418,11 +431,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					minSize = size;
 				}
 			}
+			
 			params.setPictureSize(minSize.width, minSize.height);
 			// params.setPictureSize(medSize.width, medSize.height);
+			params.setPreviewSize(params.getPictureSize().width, params.getPictureSize().height);
 			mCamera.setParameters(params);
-			Log.w(TAG, "Picture size: width = " + minSize.width + " height = "
-					+ minSize.height);
+			Log.w(TAG, "Picture size: width = " + params.getPreviewSize().width + " height = "
+					+ params.getPreviewSize().height);
 			// Create our Preview view and set it as the content of our
 			// activity.
 			FrameLayout preview = (FrameLayout) findViewById(R.id.camera_window);
@@ -430,7 +445,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				preview.removeView(mPreview);
 			}
 			mPreview = new CameraPreview(this, mCamera);
-			preview.addView(mPreview, 1);
+			preview.addView(mPreview, 0);
 			mCamera.startPreview();
 			preview.invalidate();
 		}
