@@ -528,9 +528,7 @@ public class DepthMapper implements Callable<Bitmap> {
 				switch (mFilterMode) {
 				case NONE:
 					mSumSq -= PIXEL_PRODUCTS[removed][removed];
-					;
 					mSumSq += PIXEL_PRODUCTS[val][val];
-					;
 					break;
 				case AVERAGE:
 					mSum -= removed;
@@ -569,9 +567,7 @@ public class DepthMapper implements Callable<Bitmap> {
 				switch (mFilterMode) {
 				case NONE:
 					mSumSq -= PIXEL_PRODUCTS[removed][removed];
-					;
 					mSumSq += PIXEL_PRODUCTS[val][val];
-					;
 					break;
 				case AVERAGE:
 					mSum -= removed;
