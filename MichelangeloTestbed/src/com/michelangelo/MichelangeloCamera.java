@@ -22,6 +22,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
@@ -59,6 +60,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private Handler mHandler = null;
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +110,24 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						yawText.setText((int)mSensor.Deg_orientation[0] + "°");
 						pitchText.setText((int)mSensor.Deg_orientation[1] + "°");
 						rollText.setText((int)mSensor.Deg_orientation[2] + "°"); 
+						float yaw = mSensor.Rad_orientation[0];
+						float pitch = mSensor.Rad_orientation[1];
+						float roll = mSensor.Rad_orientation[2];
+						alv.setAngle(yaw);
+						pitchLine.setAngle(pitch);
+						horizonLine.setAngle(roll);
+						
+						if( mSensor.PITCHREACHED ){
+							pitchLine.paint.setColor(Color.GREEN);
+						} else {
+							pitchLine.paint.setColor(Color.LTGRAY);
+						}
+						
+						if( mSensor.ROLLREACHED ){
+							horizonLine.paint.setColor(Color.GREEN);
+						} else {
+							horizonLine.paint.setColor(Color.LTGRAY);
+						}
 					}
 				});
 			}
