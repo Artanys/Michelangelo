@@ -279,8 +279,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			int bmWidth = bitmap.getWidth();
 			int bmHeight = bitmap.getHeight();
 
-			byte[] yv12 = getYV12(bmWidth, bmHeight, bitmap);
-			byte[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
+			int[] yv12 = getYV12(bmWidth, bmHeight, bitmap);
+			int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
 
 			// Debug.startMethodTracing();
 
