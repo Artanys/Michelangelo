@@ -139,6 +139,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
         mSensor.onCreate(this);
        
         Log.d(TAG, "Done creating Camera Page");
+
 	}
 
 	/** A safe way to get an instance of the Camera object. */
@@ -287,14 +288,14 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mHandler = new Handler();
 			if (mExecutor == null)
 				mExecutor = Executors.newCachedThreadPool();
-			if (mTaskList == null)
-				mTaskList = new ArrayList<Future<Bitmap>>();
 			if (mDMList == null)
 				mDMList = new ArrayList<DepthMapper>();
+			if (mTaskList == null)
+				mTaskList = new ArrayList<Future<Bitmap>>();
 			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight);
 			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
-			dm.setFilterMode(DepthMapper.FILTER_MODE.BILATERAL);
+			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
 			if (mDMList.size() > 0) {
 				mDMList.get(mDMList.size() - 1).setRightData(y2D, bmWidth,
 						bmHeight);
@@ -409,12 +410,12 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	}
 
 	@Override
-    protected void onPause() {
-        super.onPause();
-        releaseCamera();              // release the camera immediately on pause event
-        mSensor.onPause();
-    }
-	
+	protected void onPause() {
+		super.onPause();
+		releaseCamera(); // release the camera immediately on pause event
+		mSensor.onPause();
+	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -422,24 +423,24 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		mCamera.startPreview();
 		mSensor.onResume();
 	}
-	
+
 	@Override
-    protected void onDestroy() {
-        super.onDestroy();
-        releaseCamera();              // release the camera immediately on pause event
-        mSensor.onDestroy();
-    }
-	
-	private void releaseCamera(){
-        if (mCamera != null){
-        	mCamera.stopPreview();
-            mCamera.release();        // release the camera for other applications
-            mCamera = null;
-        }
-    }
-	
-	private void grabCamera(){
-		if (mCamera == null){
+	protected void onDestroy() {
+		super.onDestroy();
+		releaseCamera(); // release the camera immediately on pause event
+		mSensor.onDestroy();
+	}
+
+	private void releaseCamera() {
+		if (mCamera != null) {
+			mCamera.stopPreview();
+			mCamera.release(); // release the camera for other applications
+			mCamera = null;
+		}
+	}
+
+	private void grabCamera() {
+		if (mCamera == null) {
 			mCamera = getCameraInstance();
 			Parameters params = mCamera.getParameters();
 			List<Size> sizes = params.getSupportedPictureSizes();
@@ -471,22 +472,19 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		}
 	}
 
-	
-	private byte[] getYV12(int inputWidth, int inputHeight, Bitmap scaled) {
+	private int[] getYV12(int inputWidth, int inputHeight, Bitmap scaled) {
 
 		int[] argb = new int[inputWidth * inputHeight];
 
 		scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
-		byte[] yVals = new byte[inputWidth * inputHeight];
-		encodeYV12(yVals, argb, inputWidth, inputHeight);
+		encodeYV12(argb, inputWidth, inputHeight);
 
 		scaled.recycle();
 
-		return yVals;
+		return argb;
 	}
 
-	private void encodeYV12(byte[] yuv420sp, int[] argb, int width, int height) {
-		int yIndex = 0;
+	private void encodeYV12(int[] argb, int width, int height) {
 		int R, G, B, Y;
 		int index = 0;
 		for (int j = 0; j < height; j++) {
@@ -498,15 +496,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				// well known RGB to YUV algorithm
 				Y = ((66 * R + 129 * G + 25 * B + 128) >> 8) + 16;
 
-				yuv420sp[yIndex++] = (byte) ((Y < 0) ? 0
-						: ((Y > 255) ? 255 : Y));
-				index++;
+				argb[index++] = ((Y < 0) ? 0 : ((Y > 255) ? 255 : Y));
 			}
 		}
 	}
 
-	private byte[][] getY2DfromYV12(byte[] yv12, int width, int height) {
-		byte[][] y2D = new byte[height][width];
+	private int[][] getY2DfromYV12(int[] yv12, int width, int height) {
+		int[][] y2D = new int[height][width];
 		for (int i = 0; i < height; i++) {
 			int startIndex = i * width;
 			System.arraycopy(yv12, startIndex, y2D[i], 0, width);
