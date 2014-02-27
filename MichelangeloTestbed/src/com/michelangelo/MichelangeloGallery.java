@@ -1,11 +1,13 @@
 package com.michelangelo;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -26,6 +28,8 @@ import android.widget.Toast;
 
 public class MichelangeloGallery extends MichelangeloUI implements ConfirmDeleteFragment.ConfirmDeleteListener{
 
+    protected ArrayList<Drawable> thumbs = new ArrayList<Drawable>();
+    
     public class CheckableLayout extends FrameLayout implements Checkable {
         private boolean mChecked;
  
@@ -38,12 +42,6 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 		public void setChecked(boolean checked) {
             mChecked = checked;
             setBackgroundDrawable(checked ? getResources().getDrawable(R.color.blue) : null);
-            
-            /*if(checked){
-            	this.animate().rotationX(15);
-            } else {
-            	this.animate().rotationX(0);
-            }*/
         }
  
         public boolean isChecked() {
@@ -67,6 +65,12 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 		super.onCreate(savedInstanceState);
 		// Show the Up button in the action bar.
 		setupActionBar();
+		
+
+		ArrayList<File> filePaths = com.michelangelo.MichelangeloCamera.getMediaFiles();
+		for(File filePath : filePaths) {
+			thumbs.add(Drawable.createFromPath(filePath.toString()));
+		}
 		
 		final GridView gridview = (GridView) findViewById(R.id.gridview);
 	    gridview.setAdapter(new ImageAdapter(this));
@@ -204,7 +208,7 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 	    }
 
 	    public int getCount() {
-	        return mThumbIds.length;
+	        return thumbs.size();
 	    }
 
 	    public Object getItem(int position) {
@@ -237,7 +241,9 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 	            imageView = (ImageView) layout.getChildAt(0);
 	        }
 
-	        imageView.setImageResource(mThumbIds[position]);
+	        //imageView.setImageResource(mThumbIds[position]);
+	        
+			imageView.setImageDrawable(thumbs.get(position));
 	        thumbNails.add(position, imageView);
 	        
 	        return layout;

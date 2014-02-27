@@ -1,50 +1,184 @@
 <!-- The main content view -->
 <FrameLayout 
-	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:android="http://schemas.android.com/apk/res/android"	
+    xmlns:custom="http://schemas.android.com/apk/res/com.michelangelo"
 	xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
     tools:context=".MichelangeloCamera"
-    android:visibility="visible"
-    android:id="@+id/camera_preview" >
+    android:id="@+id/camera_window" >
 
     <!--
          This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows.
-    -->
-
-	<LinearLayout
-	    android:id="@+id/fullscreen_content_controls"
-	    style="?buttonBarStyle"
+    -->    
+	
+	<ImageView
+	    android:id="@+id/last_image"
 	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_gravity="bottom|center_horizontal"
-	    android:orientation="horizontal"
-	    android:visibility="visible"
-	    tools:ignore="UselessParent" >
+	    android:layout_height="match_parent"
+	    android:alpha=".45"/>
+	
+	<LinearLayout
+	    android:id="@+id/overlay"
+	    android:layout_marginTop="?android:attr/actionBarSize"
+	    android:paddingTop="15dp"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:orientation="vertical">
+	    <LinearLayout
+	        android:id="@+id/figures"
+    		android:layout_height="45dp"
+    		android:layout_width="wrap_content"
+	    	android:orientation="horizontal"
+	    	android:layout_gravity="center_horizontal">"
+	          
+		    <View 
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="10dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"/>
+	        <RelativeLayout
+	            android:layout_height="wrap_content"
+	            android:layout_width="wrap_content">
+		        <com.michelangelo.CircleView
+		            android:id="@+id/circle"
+		        	style="@style/OverlayStyle"
+		            android:layout_width="40dp"
+		            android:layout_height="match_parent"/>
 
+		        <com.michelangelo.AngledLineView
+		            android:id="@+id/circleLine"
+		            android:layout_width="0dp"
+		            android:layout_height="0dp"
+		            android:layout_alignBottom="@id/circle"
+		            android:layout_alignLeft="@id/circle"
+		            android:layout_alignRight="@id/circle"
+		            android:layout_alignTop="@id/circle" />
+		    </RelativeLayout>   
+		        	        
+	    	<TextView
+	    	    android:id="@+id/yaw_text"
+	    	    style="@style/OverlayStyle"
+	    	    android:layout_width="70dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"
+	    	    android:paddingLeft="10dp"
+	    	    android:paddingRight="10dp"
+	    	    android:textSize="18sp" />
+		    	        	
+	        <com.michelangelo.CenteredAngledLineView
+	            android:id="@+id/pitchLine"
+	        	style="@style/OverlayStyle"
+		        android:layout_width="40dp"
+		        android:layout_height="match_parent"/>	
+	    	   	        
+	    	<TextView
+	    	    android:id="@+id/pitch_text"    	    
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="70dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"
+	    	    android:paddingLeft="10dp"
+	    	    android:paddingRight="10dp"
+	    	    android:textSize="18sp"/>
+	    	
+	    	<com.michelangelo.CenteredAngledLineView
+	            android:id="@+id/horizonLine"
+	            style="@style/OverlayStyle"
+	            android:layout_width="40dp"
+	            android:layout_height="match_parent"/>
+	    	<TextView
+	    	    android:id="@+id/roll_text"    	    
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="70dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"
+	    	    android:paddingLeft="10dp"
+	    	    android:paddingRight="10dp"
+	    	    android:textSize="18sp"/>	
+ 
+	    </LinearLayout>
+	    <LinearLayout
+	        android:id="@+id/figure_labels"
+	        android:layout_height="wrap_content"
+	        android:layout_width="wrap_content"
+	        android:layout_gravity="center_horizontal"
+	        android:orientation="horizontal">
+        	          
+		    <View 
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="10dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"/>
+	    	<TextView
+		        android:id="@+id/yaw"
+	        	style="@style/OverlayStyle"
+		        android:layout_width="40dp"
+		        android:layout_height="wrap_content"
+		        android:gravity="center_horizontal"
+		        android:textSize="16sp"
+		        android:text="@string/yaw_label"/>   
+		    <View 
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="70dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"
+	    	    android:paddingLeft="10dp"
+	    	    android:paddingRight="10dp"/>
+        
+	    	<TextView
+		        android:id="@+id/pitch"
+	        	style="@style/OverlayStyle"
+		        android:layout_width="40dp"
+		        android:layout_height="wrap_content"
+		        android:gravity="center_horizontal"
+		        android:textSize="16sp"
+		        android:text="@string/pitch_label"/>   
+		    <View 
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="70dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"
+	    	    android:paddingLeft="10dp"
+	    	    android:paddingRight="10dp"/>
+        
+	    	<TextView
+		        android:id="@+id/roll"
+	        	style="@style/OverlayStyle"
+		        android:layout_width="40dp"
+		        android:layout_height="wrap_content"
+		        android:gravity="center_horizontal"
+		        android:textSize="16sp"
+		        android:text="@string/roll_label"/>   
+		    <View 
+	        	style="@style/OverlayStyle"
+	    	    android:layout_width="70dp"
+	    	    android:layout_height="match_parent"
+	    	    android:gravity="center"
+	    	    android:paddingLeft="10dp"
+	    	    android:paddingRight="10dp"/>
+	    </LinearLayout>
+
+	    <com.michelangelo.RectangleView
+	        android:id="@+id/guideBox"
+	        android:layout_width="match_parent"
+	        android:layout_height="0dp"
+	        android:layout_margin="20dp"
+	        android:layout_weight="5" />
+	        	
         <Button
             android:id="@+id/button_capture"
             style="?buttonBarButtonStyle"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/burnt_orange"
             android:text="@string/dummy_button"
             android:visibility="visible"   
-            android:layout_gravity="bottom|center_horizontal"
-            android:orientation="horizontal"
+            android:layout_gravity="bottom|center_horizontal" 
             tools:ignore="UselessParent" />
-
-    </LinearLayout>
-	
-    <RelativeLayout
-        android:id="@+id/loadingPanel"
-        style="@style/GenericProgressBackground"
-        android:visibility="gone" >
-
-	    <ProgressBar
-	        style="@style/GenericProgressIndicator"/>
 	    
-	</RelativeLayout>
+	</LinearLayout>
+    
 </FrameLayout>

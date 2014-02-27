@@ -52,8 +52,7 @@
     <string name="confirm_delete_selected">Delete all of the selected models?</string>
     <string name="confirm_delete_model">Delete this model?</string>
     <string name="title_activity_michelangelo_ui">MichelangeloUI</string>
-    <string name="sensor_output">roll: , pitch: , yaw: </string>
-    
+    <string name="sensor_output">roll: , pitch: , yaw: </string>    
     <string name="hello">Please load the STL file from the file chooser(menu key, or tap the screen).</string>
     <string name="error_fetch_data">Failed to read the STL file.</string>
     <string name="stl_load_progress_title">STL file loading...</string>
@@ -78,5 +77,8 @@
     <string name="axes">Axes:</string>
     <string name="resetToDefault">Reset to default value.</string>
     <string name="closePreferences">Save &amp; close</string>
+    <string name="roll_label">Roll</string>
+    <string name="pitch_label">Pitch</string>
+    <string name="yaw_label">Yaw</string>
 
 </resources>

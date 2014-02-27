@@ -22,6 +22,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
@@ -41,7 +42,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MichelangeloCamera extends MichelangeloUI implements
@@ -58,7 +59,9 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private ArrayList<DepthMapper> mDMList = null;
 	private Handler mHandler = null;
 	private MichelangeloSensor mSensor;
-
+	private Bitmap bitmapLast;
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
@@ -77,37 +80,66 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setDisplayShowHomeEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
-
-		FrameLayout cameraPreview = (FrameLayout) findViewById(R.id.camera_preview);
-		cameraPreview.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// get an image from the camera
-				mCamera.autoFocus(null);
-			}
-		});
-
+		
+		FrameLayout cameraPreview = (FrameLayout) findViewById(R.id.camera_window);
+		cameraPreview.setOnClickListener(
+			new View.OnClickListener() {
+		        @Override
+		        public void onClick(View v) {
+		            // get an image from the camera
+		        	mCamera.autoFocus(null);
+		        }
+		    }
+		);
+		
 		final Handler handler = new Handler();
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
 				handler.post(new Runnable() {
 					public void run() {
-						TextView tv = (TextView) findViewById(R.id.button_capture);
-						tv.setText("yaw: " + mSensor.orientation[0]
-								+ " pitch: " + mSensor.orientation[1]
-								+ " roll: " + mSensor.orientation[2]);
+						AngledLineView alv = (AngledLineView) findViewById(R.id.circleLine);
+						CenteredAngledLineView horizonLine = (CenteredAngledLineView) findViewById(R.id.horizonLine);
+						CenteredAngledLineView pitchLine = (CenteredAngledLineView) findViewById(R.id.pitchLine);
+						TextView yawText = (TextView) findViewById(R.id.yaw_text);
+						TextView pitchText = (TextView) findViewById(R.id.pitch_text);
+						TextView rollText = (TextView) findViewById(R.id.roll_text);
+						alv.setAngle(mSensor.Rad_orientation[0]);
+						pitchLine.setAngle(mSensor.Rad_orientation[1]);
+						horizonLine.setAngle(mSensor.Rad_orientation[2]);
+						yawText.setText((int)mSensor.Deg_orientation[0] + "°");
+						pitchText.setText((int)mSensor.Deg_orientation[1] + "°");
+						rollText.setText((int)mSensor.Deg_orientation[2] + "°"); 
+						float yaw = mSensor.Rad_orientation[0];
+						float pitch = mSensor.Rad_orientation[1];
+						float roll = mSensor.Rad_orientation[2];
+						alv.setAngle(yaw);
+						pitchLine.setAngle(pitch);
+						horizonLine.setAngle(roll);
+						
+						if( mSensor.PITCHREACHED ){
+							pitchLine.paint.setColor(Color.GREEN);
+						} else {
+							pitchLine.paint.setColor(Color.LTGRAY);
+						}
+						
+						if( mSensor.ROLLREACHED ){
+							horizonLine.paint.setColor(Color.GREEN);
+						} else {
+							horizonLine.paint.setColor(Color.LTGRAY);
+						}
 					}
 				});
 			}
-		}, 1000, 1000);
+		},125,125);
+		
+        releaseCamera();
+        grabCamera();
+        mSensor = new MichelangeloSensor();
+        mSensor.onCreate(this);
+       
+        Log.d(TAG, "Done creating Camera Page");
 
-		releaseCamera();
-		grabCamera();
-		mSensor = new MichelangeloSensor();
-		mSensor.onCreate(this);
-
-		Log.d(TAG, "Done creating Camera Page");
 	}
 
 	/** A safe way to get an instance of the Camera object. */
@@ -215,13 +247,11 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			Log.d(TAG, "Taking Picture");
+			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 			mPreview.setVisibility(View.GONE);
-			findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
-			findViewById(R.id.loadingPanel).bringToFront();
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
-				Log.d(TAG,
-						"Error creating media file, check storage permissions");
+				Log.d(TAG, "Error creating media file, check storage permissions");
 				return;
 			}
 
@@ -234,18 +264,22 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			} catch (IOException e) {
 				Log.d(TAG, "Error accessing file: " + e.getMessage());
 			}
-			findViewById(R.id.loadingPanel).setVisibility(View.GONE);
 			mPreview.setVisibility(View.VISIBLE);
 
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);			
+			int width = lastImage.getWidth();
+			int height = lastImage.getHeight();
+			
 			Matrix mat = new Matrix();
 			mat.postRotate(90);
 			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
+			bitmapLast = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
+			lastImage.setImageBitmap(bitmapLast);
 			
-			int bmWidth = bitmapRot.getWidth();
-			int bmHeight = bitmapRot.getHeight();
+			int bmWidth = bitmap.getWidth();
+			int bmHeight = bitmap.getHeight();
 
-			int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
+			int[] yv12 = getYV12(bmWidth, bmHeight, bitmap);
 			int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
 
 			// Debug.startMethodTracing();
@@ -269,7 +303,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
 			mDMList.add(dm);
-		}
+		}			
 	};
 
 	/** Create a File for saving an image or video */
@@ -308,6 +342,40 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 		return mediaFile;
 	}
+	
+
+	/** Create a File for saving an image or video */
+	public static ArrayList<File> getMediaFiles() {
+		// To be safe, you should check that the SDCard is mounted
+		// using Environment.getExternalStorageState() before doing this.
+
+		ArrayList<File> matchingFiles = new ArrayList<File>();
+		
+		File mediaStorageDir = new File(
+				Environment
+						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+				"Michelangelo");
+		// This location works best if you want the created images to be shared
+		// between applications and persist after your app has been uninstalled.
+
+		// Create the storage directory if it does not exist
+		if (!mediaStorageDir.exists()) {
+			Log.d("MichelangeloCamera", "media Directory doesn't exist!");
+			return matchingFiles;		
+		}
+
+
+	    File[] files = mediaStorageDir.listFiles();
+
+	    for (File file : files) {
+	    	if(file.getName().endsWith(".jpg")){
+	    		matchingFiles.add(file);
+	        }
+	    }
+
+		return matchingFiles;
+	}
+	
 
 	public static void setCameraDisplayOrientation(Activity activity,
 			int cameraId, android.hardware.Camera camera) {
@@ -384,23 +452,23 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					minSize = size;
 				}
 			}
+			
 			params.setPictureSize(minSize.width, minSize.height);
 			// params.setPictureSize(medSize.width, medSize.height);
+			params.setPreviewSize(params.getPictureSize().width, params.getPictureSize().height);
 			mCamera.setParameters(params);
-			Log.w(TAG, "Picture size: width = " + minSize.width + " height = "
-					+ minSize.height);
+			Log.w(TAG, "Picture size: width = " + params.getPreviewSize().width + " height = "
+					+ params.getPreviewSize().height);
 			// Create our Preview view and set it as the content of our
 			// activity.
-			FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+			FrameLayout preview = (FrameLayout) findViewById(R.id.camera_window);
 			if (mPreview != null) {
 				preview.removeView(mPreview);
 			}
 			mPreview = new CameraPreview(this, mCamera);
-			preview.addView(mPreview, 1);
-			LinearLayout button_frame = (LinearLayout) findViewById(R.id.fullscreen_content_controls);
-			preview.removeView(button_frame);
-			preview.addView(button_frame);
+			preview.addView(mPreview, 0);
 			mCamera.startPreview();
+			preview.invalidate();
 		}
 	}
 
