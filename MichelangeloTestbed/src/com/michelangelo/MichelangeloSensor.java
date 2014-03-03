@@ -22,6 +22,14 @@ public class MichelangeloSensor implements SensorEventListener {
 	public final float[] Deg_orientation = new float[3];
 	public final float[] Rad_orientation = new float[3];
 	
+	private final float PITCHTARGET = 25.0f;
+	private final float ROLLTARGET = 0;
+	private float YAWTARGET;
+	
+	public boolean PITCHREACHED = false;
+	public boolean ROLLREACHED = false;
+	public boolean YAWREACHED = true;
+	
 	public void onCreate(Context ActivityContext) {
 		
 		this.mContext = ActivityContext;
@@ -84,6 +92,18 @@ public class MichelangeloSensor implements SensorEventListener {
             Deg_orientation[0] = (int)(Rad_orientation[0]*DEG);
             Deg_orientation[1] = (int)(Rad_orientation[1]*DEG+90);
             Deg_orientation[2] = (int)(Rad_orientation[2]*DEG);
-        }			
+            
+            if(( ( PITCHTARGET - 1 ) < Deg_orientation[1]) && ( ( PITCHTARGET + 1 ) > Deg_orientation[1] )) {
+            	PITCHREACHED = true;
+            } else {
+            	PITCHREACHED = false;
+            }
+            
+            if(( ( ROLLTARGET - 1 ) < Deg_orientation[2]) && ( ( ROLLTARGET + 1 ) > Deg_orientation[2] )) {
+            	ROLLREACHED = true;
+            } else {
+            	ROLLREACHED = false;
+            }
+        }
 	}
 }
