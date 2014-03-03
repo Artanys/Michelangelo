@@ -10,14 +10,9 @@ public class CenteredAngledLineView extends AngledLineView{
 		super(context, attrs);
 	}
 
-	public CenteredAngledLineView(Context context) {
-		super(context);
-	}
-	
 	protected void onDraw(Canvas canvas) {
 		if(!radiusSet) {
 			radius = Math.min(this.getWidth(), this.getHeight())/2;
-			radiusSet = true;
 		}
 		float X = (float) (radius * Math.cos(angle));
 		float Y = (float) (radius * Math.sin(angle));
