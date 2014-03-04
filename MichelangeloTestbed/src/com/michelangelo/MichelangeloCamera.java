@@ -35,6 +35,7 @@ import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -60,12 +61,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private Handler mHandler = null;
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
+
+	public Vibrator vibe; 
 	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
+		vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(new View.OnClickListener() {
@@ -128,6 +132,23 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						} else {
 							horizonLine.paint.setColor(Color.LTGRAY);
 						}
+
+						if(vibe.hasVibrator()) {
+							long[] pattern = new long[3];
+							pattern[2] = 150; //500 ms of off
+							
+							if(mSensor.ROLLREACHED) pattern[1] += 40;
+							if(mSensor.PITCHREACHED) pattern[1] += 40;
+							if (!mSensor.ROLLREACHED && ! mSensor.PITCHREACHED) {
+								vibe.cancel();
+							} else if(mSensor.ROLLREACHED != mSensor.prevRollReached || mSensor.PITCHREACHED != mSensor.prevPitchReached) {
+								vibe.cancel();
+								vibe.vibrate(pattern, 0);
+							}
+						
+						}
+						mSensor.prevRollReached = mSensor.ROLLREACHED;
+						mSensor.prevPitchReached = mSensor.PITCHREACHED;
 					}
 				});
 			}
@@ -412,6 +433,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	@Override
 	protected void onPause() {
 		super.onPause();
+		vibe.cancel(); //turn off the vibration
 		releaseCamera(); // release the camera immediately on pause event
 		mSensor.onPause();
 	}
@@ -427,6 +449,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		vibe.cancel(); //turn off the vibration
 		releaseCamera(); // release the camera immediately on pause event
 		mSensor.onDestroy();
 	}

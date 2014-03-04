@@ -25,7 +25,9 @@ public class MichelangeloSensor implements SensorEventListener {
 	private final float PITCHTARGET = 25.0f;
 	private final float ROLLTARGET = 0;
 	private float YAWTARGET;
-	
+
+	public boolean prevRollReached = false;
+	public boolean prevPitchReached = false;
 	public boolean PITCHREACHED = false;
 	public boolean ROLLREACHED = false;
 	public boolean YAWREACHED = true;
