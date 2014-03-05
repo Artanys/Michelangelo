@@ -53,6 +53,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
 	public static int NUM_IMAGES = 8;
+	
+	public static final long pulse_duration = 100;
+	public static final long pulse_off_duration = 600;
+	
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
 	private ExecutorService mExecutor = null;
@@ -70,6 +74,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
 		vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		if(vibe.hasVibrator()) vibe.vibrate(new long[]{0, pulse_duration, pulse_off_duration}, 0);
 
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(new View.OnClickListener() {
@@ -135,13 +140,14 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 						if(vibe.hasVibrator()) {
 							long[] pattern = new long[3];
-							pattern[2] = 150; //500 ms of off
+							pattern[1] = pulse_duration; //100 ms on
+							pattern[2] = pulse_off_duration; //900 ms of off
 							
-							if(mSensor.ROLLREACHED) pattern[1] += 40;
-							if(mSensor.PITCHREACHED) pattern[1] += 40;
-							if (!mSensor.ROLLREACHED && ! mSensor.PITCHREACHED) {
+							if(mSensor.ROLLREACHED) pattern[2] *= 2;
+							if(mSensor.PITCHREACHED) pattern[2] *= 2;
+							if(mSensor.ROLLREACHED && mSensor.PITCHREACHED) {
 								vibe.cancel();
-							} else if(mSensor.ROLLREACHED != mSensor.prevRollReached || mSensor.PITCHREACHED != mSensor.prevPitchReached) {
+							}else if(mSensor.ROLLREACHED != mSensor.prevRollReached || mSensor.PITCHREACHED != mSensor.prevPitchReached) {
 								vibe.cancel();
 								vibe.vibrate(pattern, 0);
 							}
