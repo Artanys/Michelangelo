@@ -2,7 +2,6 @@ package com.michelangelo;
 
 import java.io.File;
 
-import com.michelangelo.*;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;

@@ -35,7 +35,6 @@ import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Vibrator;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -44,7 +43,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MichelangeloCamera extends MichelangeloUI implements
 		CaptureSettingsFragment.CaptureSettingsListener {
@@ -66,15 +67,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
 
-	public Vibrator vibe; 
+	//public Vibrator vibe; 
 	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
-		vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-		if(vibe.hasVibrator()) vibe.vibrate(new long[]{0, pulse_duration, pulse_off_duration}, 0);
+		//vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		//if(vibe.hasVibrator()) vibe.vibrate(new long[]{0, pulse_duration, pulse_off_duration}, 0);
 
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(new View.OnClickListener() {
@@ -83,6 +84,25 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				// get an image from the camera
 				mCamera.autoFocus(null);
 				mCamera.takePicture(null, null, mPicture);
+				mSensor.CaptureNumber += 1;
+				if(mSensor.CaptureNumber == 1){
+					mSensor.InitialYaw = (int) mSensor.Deg_orientation[0];
+					mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
+					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+					lastImage.setVisibility(View.VISIBLE);
+				}
+				if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
+					Context context = getApplicationContext();
+					CharSequence text = "Finished Image Capture Series!";
+					int duration = Toast.LENGTH_SHORT;
+
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+					
+					mSensor.CaptureNumber = 0;
+					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+					lastImage.setVisibility(View.GONE);
+				}
 			}
 		});
 
@@ -110,6 +130,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						AngledLineView alv = (AngledLineView) findViewById(R.id.circleLine);
 						CenteredAngledLineView horizonLine = (CenteredAngledLineView) findViewById(R.id.horizonLine);
 						CenteredAngledLineView pitchLine = (CenteredAngledLineView) findViewById(R.id.pitchLine);
+						CircleView alvCircle = (CircleView) findViewById(R.id.circle);
 						TextView yawText = (TextView) findViewById(R.id.yaw_text);
 						TextView pitchText = (TextView) findViewById(R.id.pitch_text);
 						TextView rollText = (TextView) findViewById(R.id.roll_text);
@@ -128,33 +149,50 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						
 						if( mSensor.PITCHREACHED ){
 							pitchLine.paint.setColor(Color.GREEN);
+							pitchText.setTextColor(Color.GREEN);
 						} else {
 							pitchLine.paint.setColor(Color.LTGRAY);
+							pitchText.setTextColor(Color.LTGRAY);
 						}
 						
 						if( mSensor.ROLLREACHED ){
 							horizonLine.paint.setColor(Color.GREEN);
+							rollText.setTextColor(Color.GREEN);
 						} else {
 							horizonLine.paint.setColor(Color.LTGRAY);
+							rollText.setTextColor(Color.LTGRAY);
+						}
+						
+						if( mSensor.YAWREACHED ){
+							alv.paint.setColor(Color.GREEN);
+							yawText.setTextColor(Color.GREEN);
+							alvCircle.paint.setColor(Color.GREEN);
+						} else {
+							alv.paint.setColor(Color.LTGRAY);
+							yawText.setTextColor(Color.LTGRAY);
+							alvCircle.paint.setColor(Color.LTGRAY);
 						}
 
-						if(vibe.hasVibrator()) {
-							long[] pattern = new long[3];
-							pattern[1] = pulse_duration; //100 ms on
-							pattern[2] = pulse_off_duration; //900 ms of off
-							
-							if(mSensor.ROLLREACHED) pattern[2] *= 2;
-							if(mSensor.PITCHREACHED) pattern[2] *= 2;
-							if(mSensor.ROLLREACHED && mSensor.PITCHREACHED) {
-								vibe.cancel();
-							}else if(mSensor.ROLLREACHED != mSensor.prevRollReached || mSensor.PITCHREACHED != mSensor.prevPitchReached) {
-								vibe.cancel();
-								vibe.vibrate(pattern, 0);
-							}
-						
-						}
-						mSensor.prevRollReached = mSensor.ROLLREACHED;
-						mSensor.prevPitchReached = mSensor.PITCHREACHED;
+//						if(vibe.hasVibrator()) {
+//							long[] pattern = new long[3];
+//							pattern[1] = pulse_duration; //100 ms on
+//							pattern[2] = pulse_off_duration; //900 ms of off
+//							
+//							if(mSensor.ROLLREACHED) pattern[2] *= 2;
+//							if(mSensor.PITCHREACHED) pattern[2] *= 2;
+//							if(mSensor.YAWREACHED) pattern[2] *= 2;
+//							if(mSensor.ROLLREACHED && mSensor.PITCHREACHED && mSensor.YAWREACHED) {
+//								vibe.cancel();
+//							}else if(mSensor.ROLLREACHED != mSensor.prevRollReached || mSensor.PITCHREACHED != mSensor.prevPitchReached
+//									|| mSensor.YAWREACHED != mSensor.prevYawReached) {
+//								vibe.cancel();
+//								vibe.vibrate(pattern, 0);
+//							}
+//						
+//						}
+//						mSensor.prevRollReached = mSensor.ROLLREACHED;
+//						mSensor.prevPitchReached = mSensor.PITCHREACHED;
+//						mSensor.prevYawReached = mSensor.YAWREACHED;
 					}
 				});
 			}
@@ -275,6 +313,9 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		public void onPictureTaken(byte[] data, Camera camera) {
 			Log.d(TAG, "Taking Picture");
 			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+			FrameLayout lastImageBox = (FrameLayout) findViewById(R.id.last_image_window);
+			FrameLayout imageBox = (FrameLayout) findViewById(R.id.camera_window);
+			LinearLayout overlayBox = (LinearLayout) findViewById(R.id.overlay);
 			mPreview.setVisibility(View.GONE);
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 			if (pictureFile == null) {
@@ -294,13 +335,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mPreview.setVisibility(View.VISIBLE);
 
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);			
-			int width = lastImage.getWidth();
-			int height = lastImage.getHeight();
+			int width = imageBox.getWidth();
+			int height = imageBox.getHeight();
 			
 			Matrix mat = new Matrix();
 			mat.postRotate(90);
 			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
-			bitmapLast = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
+			Bitmap bitmapResized = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
+			bitmapLast = Bitmap.createBitmap(bitmapResized, lastImageBox.getLeft() + overlayBox.getLeft(), lastImageBox.getTop() 
+					+ overlayBox.getTop(), lastImage.getWidth(), lastImage.getHeight());
 			lastImage.setImageBitmap(bitmapLast);
 			
 			int bmWidth = bitmapRot.getWidth();
@@ -439,7 +482,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	@Override
 	protected void onPause() {
 		super.onPause();
-		vibe.cancel(); //turn off the vibration
+		//vibe.cancel(); //turn off the vibration
 		releaseCamera(); // release the camera immediately on pause event
 		mSensor.onPause();
 	}
@@ -455,7 +498,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		vibe.cancel(); //turn off the vibration
+		//vibe.cancel(); //turn off the vibration
 		releaseCamera(); // release the camera immediately on pause event
 		mSensor.onDestroy();
 	}
@@ -592,6 +635,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.putInt(getString(R.string.saved_setting_num_images), numImages);
+		NUM_IMAGES = numImages;
 		editor.commit();
 	}
 

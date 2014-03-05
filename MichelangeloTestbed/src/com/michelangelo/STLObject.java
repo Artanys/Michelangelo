@@ -8,7 +8,6 @@ import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.michelangelo.*;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;

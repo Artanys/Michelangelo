@@ -1,6 +1,5 @@
 package com.michelangelo;
 
-import com.michelangelo.*;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;

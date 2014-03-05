@@ -14,11 +14,7 @@
          android:fitsSystemWindows.
     -->    
 	
-	<ImageView
-	    android:id="@+id/last_image"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:alpha=".45"/>
+	
 	
 	<LinearLayout
 	    android:id="@+id/overlay"
@@ -32,7 +28,7 @@
     		android:layout_height="45dp"
     		android:layout_width="wrap_content"
 	    	android:orientation="horizontal"
-	    	android:layout_gravity="center_horizontal">"
+	    	android:layout_gravity="center_horizontal">
 	          
 		    <View 
 	        	style="@style/OverlayStyle"
@@ -161,13 +157,26 @@
 	    	    android:paddingRight="10dp"/>
 	    </LinearLayout>
 
-	    <com.michelangelo.RectangleView
-	        android:id="@+id/guideBox"
+	    <FrameLayout
+	        android:id="@+id/last_image_window"
 	        android:layout_width="match_parent"
 	        android:layout_height="0dp"
 	        android:layout_margin="20dp"
-	        android:layout_weight="5" />
-	        	
+	        android:layout_weight="5">
+	    
+		    <com.michelangelo.RectangleView
+		        android:id="@+id/guideBox"
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent" />
+		    
+		    <ImageView
+			    android:id="@+id/last_image"
+			    android:layout_width="match_parent"
+			    android:layout_height="match_parent"
+			    android:alpha=".45"/>
+		    
+	    </FrameLayout>
+		        	
         <Button
             android:id="@+id/button_capture"
             style="?buttonBarButtonStyle"

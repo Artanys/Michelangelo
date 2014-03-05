@@ -3,7 +3,6 @@ package com.michelangelo;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.michelangelo.*;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
