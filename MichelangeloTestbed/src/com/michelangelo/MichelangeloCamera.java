@@ -15,6 +15,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
@@ -91,6 +100,12 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		        }
 		    }
 		);
+		
+		Log.i(TAG, "Trying to load OpenCV library");
+	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_2, this, mOpenCVCallback))
+	    {
+	      Log.e(TAG, "Cannot connect to OpenCV Manager");
+	    }
 		
 		final Handler handler = new Handler();
 		Timer timer = new Timer();
@@ -278,6 +293,18 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			
 			int bmWidth = bitmapRot.getWidth();
 			int bmHeight = bitmapRot.getHeight();
+			Mat ImageMat = bitmapToMat(bitmapRot);
+			Mat grayMat = colorMatToGrayscale(ImageMat);
+			//saveBitmap(grayMatToBitmap(grayMat));
+			
+			Bitmap bmpCones1 = BitmapFactory.decodeResource(getResources(), R.drawable.cones1);
+			Bitmap bmpCones2 = BitmapFactory.decodeResource(getResources(), R.drawable.cones2);
+			Mat matCones1 = bitmapToMat(bmpCones1);
+			Mat matCones2 = bitmapToMat(bmpCones2);
+			Mat grayCones1 = colorMatToGrayscale(matCones1);
+			Mat grayCones2 = colorMatToGrayscale(matCones2);
+			//saveBitmap(grayMatToBitmap(grayCones1));
+			//saveBitmap(grayMatToBitmap(grayCones2));
 
 			int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
 			int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
@@ -292,13 +319,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mDMList = new ArrayList<DepthMapper>();
 			if (mTaskList == null)
 				mTaskList = new ArrayList<Future<Bitmap>>();
-			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight);
+			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight, grayMat);
 			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
 			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
 			if (mDMList.size() > 0) {
 				mDMList.get(mDMList.size() - 1).setRightData(y2D, bmWidth,
-						bmHeight);
+						bmHeight, grayMat);
 				mTaskList
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
@@ -526,6 +553,32 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		c.drawBitmap(bmpOriginal, 0, 0, paint);
 		return bmpGrayscale;
 	}
+	
+	public Mat bitmapToMat(Bitmap bmpOriginal) {
+		Mat bmpMat = new Mat ( bmpOriginal.getHeight(), bmpOriginal.getWidth(), CvType.CV_8U, new Scalar(4));
+		Utils.bitmapToMat(bmpOriginal, bmpMat);
+		return bmpMat;
+	}
+	
+	public Mat colorMatToGrayscale(Mat matColor) {
+		Mat grayMat = new Mat ( matColor.rows(), matColor.cols(), CvType.CV_8UC1);
+		Imgproc.cvtColor(matColor, grayMat, Imgproc.COLOR_RGBA2GRAY);
+		return grayMat;
+	}
+	
+	public static Bitmap grayMatToBitmap(Mat matOrig) {
+		Bitmap bmpResult = Bitmap.createBitmap(matOrig.cols(), matOrig.rows(), Bitmap.Config.ARGB_8888);
+		Mat temp = new Mat(matOrig.rows(), matOrig.cols(), CvType.CV_8UC4);
+		Imgproc.cvtColor(matOrig, temp, Imgproc.COLOR_GRAY2RGBA, 4);
+		Utils.matToBitmap(matOrig, bmpResult);
+		return bmpResult;
+	}
+	
+	public static Bitmap colorMatToBitmap(Mat matOrig) {
+		Bitmap bmpResult = Bitmap.createBitmap(matOrig.cols(), matOrig.rows(), Bitmap.Config.ARGB_8888);
+		Utils.matToBitmap(matOrig, bmpResult);
+		return bmpResult;
+	}
 
 	public static void saveBitmap(Bitmap bitmap) {
 		File resultFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
@@ -544,10 +597,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			fosResult.flush();
 			fosResult.close();
 			Log.d(TAG, "Bitmap written.");
+			Thread.sleep(500);
 		} catch (FileNotFoundException e) {
 			Log.d(TAG, "File not found: " + e.getMessage());
 		} catch (IOException e) {
 			Log.d(TAG, "Error accessing file: " + e.getMessage());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -572,4 +628,16 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		// User cancelled the dialog, don't update/start over
 
 	}
+	
+	private BaseLoaderCallback mOpenCVCallback = new BaseLoaderCallback(this) {
+	    @Override
+	    public void onManagerConnected(int status) {
+	        if (status == LoaderCallbackInterface.SUCCESS ) {
+	        	Log.i(TAG, "OpenCV loaded successfully");
+	        } else {
+	            super.onManagerConnected(status);
+	        }
+	    }
+	};
 }
+
