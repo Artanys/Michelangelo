@@ -5,8 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
-
 import java.lang.Math;;
 
 public class MichelangeloSensor implements SensorEventListener {
@@ -22,10 +20,17 @@ public class MichelangeloSensor implements SensorEventListener {
 	public final float[] Deg_orientation = new float[3];
 	public final float[] Rad_orientation = new float[3];
 	
+	public int InitialYaw; //degrees
+	public int CaptureNumber;
+	public int NumberOfCaptures;
+	
 	private final float PITCHTARGET = 25.0f;
 	private final float ROLLTARGET = 0;
 	private float YAWTARGET;
-	
+
+	public boolean prevRollReached = false;
+	public boolean prevPitchReached = false;
+	public boolean prevYawReached = false;
 	public boolean PITCHREACHED = false;
 	public boolean ROLLREACHED = false;
 	public boolean YAWREACHED = true;
@@ -89,20 +94,32 @@ public class MichelangeloSensor implements SensorEventListener {
             
             SensorManager.getOrientation(mRotationMatrix, Rad_orientation);
             
-            Deg_orientation[0] = (int)(Rad_orientation[0]*DEG);
-            Deg_orientation[1] = (int)(Rad_orientation[1]*DEG+90);
-            Deg_orientation[2] = (int)(Rad_orientation[2]*DEG);
+            YAWTARGET = InitialYaw + ((float) CaptureNumber / NumberOfCaptures ) * 360;
             
-            if(( ( PITCHTARGET - 1 ) < Deg_orientation[1]) && ( ( PITCHTARGET + 1 ) > Deg_orientation[1] )) {
+            if(YAWTARGET >= 180){
+            	YAWTARGET -= 360;
+            }
+            
+            Deg_orientation[0] = (int)(Rad_orientation[0]*DEG) - YAWTARGET;
+            Deg_orientation[1] = (int)(Rad_orientation[1]*DEG+90) - PITCHTARGET;
+            Deg_orientation[2] = (int)(Rad_orientation[2]*DEG) - ROLLTARGET;
+
+            if(( -1 <= Deg_orientation[1]) && ( 1 >= Deg_orientation[1] )) {
             	PITCHREACHED = true;
             } else {
             	PITCHREACHED = false;
             }
             
-            if(( ( ROLLTARGET - 1 ) < Deg_orientation[2]) && ( ( ROLLTARGET + 1 ) > Deg_orientation[2] )) {
+            if(( -1 <= Deg_orientation[2]) && ( 1 >= Deg_orientation[2] )) {
             	ROLLREACHED = true;
             } else {
             	ROLLREACHED = false;
+            }
+            
+            if(( -1 <= Deg_orientation[0]) && ( 1 >= Deg_orientation[0] )) {
+            	YAWREACHED = true;
+            } else {
+            	YAWREACHED = false;
             }
         }
 	}

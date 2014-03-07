@@ -19,6 +19,14 @@ public final class R {
         public static final int menu_options_modelviewer=0x7f080001;
     }
     public static final class attr {
+        /** <p>Must be a floating point value, such as "<code>1.2</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int angle=0x7f010002;
         /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
 or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
          */
@@ -33,6 +41,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int blue=0x7f050003;
         public static final int burnt_orange=0x7f050002;
         public static final int transparent=0x7f050004;
+        public static final int transparent_black=0x7f050005;
         public static final int transparent_blue=0x7f050001;
     }
     public static final class dimen {
@@ -68,39 +77,53 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int translucent_background=0x7f020011;
     }
     public static final class id {
-        public static final int TextView02=0x7f0b0011;
-        public static final int action_delete=0x7f0b0020;
-        public static final int action_settings=0x7f0b001e;
-        public static final int action_share=0x7f0b001f;
-        public static final int alphaSeekBar=0x7f0b0016;
-        public static final int axesToggleButton=0x7f0b0017;
-        public static final int blueSeekBar=0x7f0b0015;
-        public static final int button_capture=0x7f0b0002;
-        public static final int camera_preview=0x7f0b0000;
-        public static final int closeButton=0x7f0b000f;
-        public static final int content_frame=0x7f0b0007;
-        public static final int fullscreen_content=0x7f0b0005;
-        public static final int fullscreen_content_controls=0x7f0b0001;
-        public static final int greenSeekBar=0x7f0b0014;
-        public static final int gridToggleButton=0x7f0b0018;
-        public static final int gridview=0x7f0b0004;
-        public static final int loadButton=0x7f0b001c;
-        public static final int loadingPanel=0x7f0b0003;
-        public static final int mainLinearLayout=0x7f0b0010;
-        public static final int main_drawer_layout=0x7f0b0006;
-        public static final int main_left_drawer=0x7f0b0008;
-        public static final int objectColorView=0x7f0b0012;
-        public static final int preferncesButton=0x7f0b001d;
-        public static final int redSeekBar=0x7f0b0013;
-        public static final int resetButton=0x7f0b0019;
-        public static final int rotateOrMoveToggleButton=0x7f0b001a;
-        public static final int scroll=0x7f0b000e;
-        public static final int seekBar=0x7f0b000d;
-        public static final int stlFrameLayout=0x7f0b001b;
-        public static final int textView1=0x7f0b0009;
-        public static final int textView2=0x7f0b000a;
-        public static final int textView3=0x7f0b000b;
-        public static final int textView4=0x7f0b000c;
+        public static final int TextView02=0x7f0b001f;
+        public static final int action_delete=0x7f0b002e;
+        public static final int action_settings=0x7f0b002c;
+        public static final int action_share=0x7f0b002d;
+        public static final int alphaSeekBar=0x7f0b0024;
+        public static final int axesToggleButton=0x7f0b0025;
+        public static final int blueSeekBar=0x7f0b0023;
+        public static final int button_capture=0x7f0b0011;
+        public static final int camera_window=0x7f0b0000;
+        public static final int circle=0x7f0b0003;
+        public static final int circleLine=0x7f0b0004;
+        public static final int closeButton=0x7f0b001d;
+        public static final int content_frame=0x7f0b0015;
+        public static final int figure_labels=0x7f0b000a;
+        public static final int figures=0x7f0b0002;
+        public static final int fullscreen_content=0x7f0b0013;
+        public static final int greenSeekBar=0x7f0b0022;
+        public static final int gridToggleButton=0x7f0b0026;
+        public static final int gridview=0x7f0b0012;
+        public static final int guideBox=0x7f0b000f;
+        public static final int horizonLine=0x7f0b0008;
+        public static final int last_image=0x7f0b0010;
+        public static final int last_image_window=0x7f0b000e;
+        public static final int loadButton=0x7f0b002a;
+        public static final int mainLinearLayout=0x7f0b001e;
+        public static final int main_drawer_layout=0x7f0b0014;
+        public static final int main_left_drawer=0x7f0b0016;
+        public static final int objectColorView=0x7f0b0020;
+        public static final int overlay=0x7f0b0001;
+        public static final int pitch=0x7f0b000c;
+        public static final int pitchLine=0x7f0b0006;
+        public static final int pitch_text=0x7f0b0007;
+        public static final int preferncesButton=0x7f0b002b;
+        public static final int redSeekBar=0x7f0b0021;
+        public static final int resetButton=0x7f0b0027;
+        public static final int roll=0x7f0b000d;
+        public static final int roll_text=0x7f0b0009;
+        public static final int rotateOrMoveToggleButton=0x7f0b0028;
+        public static final int scroll=0x7f0b001c;
+        public static final int seekBar=0x7f0b001b;
+        public static final int stlFrameLayout=0x7f0b0029;
+        public static final int textView1=0x7f0b0017;
+        public static final int textView2=0x7f0b0018;
+        public static final int textView3=0x7f0b0019;
+        public static final int textView4=0x7f0b001a;
+        public static final int yaw=0x7f0b000b;
+        public static final int yaw_text=0x7f0b0005;
     }
     public static final class layout {
         public static final int activity_michelangelo_about=0x7f030000;
@@ -159,8 +182,10 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int menu_open=0x7f070026;
         public static final int objectColor=0x7f070030;
         public static final int parent_directory=0x7f070027;
+        public static final int pitch_label=0x7f070037;
         public static final int red=0x7f07002c;
         public static final int resetToDefault=0x7f070034;
+        public static final int roll_label=0x7f070036;
         public static final int saved_setting_num_images=0x7f070013;
         public static final int sensor_output=0x7f070021;
         public static final int setting_modelviewer_desc=0x7f07001c;
@@ -183,10 +208,11 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
          */
         public static final int toggleButtonMove=0x7f070029;
         public static final int toggleButtonRotate=0x7f07002a;
+        public static final int yaw_label=0x7f070038;
     }
     public static final class style {
-        public static final int Animation=0x7f09000b;
-        public static final int Animation_Activity=0x7f09000c;
+        public static final int Animation=0x7f09000d;
+        public static final int Animation_Activity=0x7f09000e;
         /** 
         Base application theme, dependent on API level. This theme is replaced
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
@@ -218,16 +244,18 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int AppTheme=0x7f090001;
         public static final int ButtonBar=0x7f090003;
         public static final int ButtonBarButton=0x7f090004;
-        public static final int FullscreenActionBarStyle=0x7f09000d;
+        public static final int FullscreenActionBarStyle=0x7f09000f;
         public static final int FullscreenTheme=0x7f090002;
-        public static final int GenericProgressBackground=0x7f090005;
-        public static final int GenericProgressIndicator=0x7f090006;
-        public static final int Theme_DefaultActivity=0x7f09000a;
+        public static final int GenericProgressBackground=0x7f090007;
+        public static final int GenericProgressIndicator=0x7f090008;
+        public static final int OverlayStyle=0x7f090006;
+        public static final int Theme_DefaultActivity=0x7f09000c;
         /**  style 
          */
-        public static final int Theme_Transparent=0x7f090009;
-        public static final int drawer_layout_style=0x7f090007;
-        public static final int left_drawer_style=0x7f090008;
+        public static final int Theme_Transparent=0x7f09000b;
+        public static final int TransparentStyle=0x7f090005;
+        public static final int drawer_layout_style=0x7f090009;
+        public static final int left_drawer_style=0x7f09000a;
     }
     public static final class styleable {
         /** 
@@ -270,5 +298,32 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
           @attr name com.michelangelo:buttonBarStyle
         */
         public static final int ButtonBarContainerTheme_buttonBarStyle = 0;
+        /** Attributes that can be used with a LineView.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #LineView_angle com.michelangelo:angle}</code></td><td></td></tr>
+           </table>
+           @see #LineView_angle
+         */
+        public static final int[] LineView = {
+            0x7f010002
+        };
+        /**
+          <p>This symbol is the offset where the {@link com.michelangelo.R.attr#angle}
+          attribute's value can be found in the {@link #LineView} array.
+
+
+          <p>Must be a floating point value, such as "<code>1.2</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          @attr name com.michelangelo:angle
+        */
+        public static final int LineView_angle = 0;
     };
 }
