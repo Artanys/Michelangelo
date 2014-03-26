@@ -321,6 +321,36 @@ public class DepthMapper implements Callable<Bitmap> {
 					MichelangeloCamera.grayMatToBitmap(rectifiedRightImage),
 					"rectifyright");
 
+			Mat combine = new Mat(mMatLeft.rows(), mMatLeft.cols() + mMatRight.cols(), mMatLeft.type());
+			for (int i=0;i<combine.cols();i++) {
+			    if (i < mMatLeft.cols()) {
+			        mMatLeft.col(i).copyTo(combine.col(i));
+			    } else {
+			    	mMatRight.col(i-mMatLeft.cols()).copyTo(combine.col(i));
+			    }
+			}
+
+			for (int i = 0; i < goodKPLeft.size(); i++) {
+				Scalar color = new Scalar(randInt(0, 255), randInt(0, 255),
+						randInt(0, 255), 255);
+				
+				int x0 = (int) goodKPLeft.get(i).x;
+				int y0 = (int) goodKPLeft.get(i).y;
+				
+				int x1 = (int) goodKPRight.get(i).x + mMatLeft.cols();
+				int y1 = (int) goodKPRight.get(i).y;
+				
+				Core.line(combine, new Point(x0, y0), new Point(x1, y1), color,
+						1);
+				Core.circle(combine, new Point(x0, y0), 5, color, -1);
+				Core.circle(combine, new Point(x1, y1), 5, color, -1);
+			}
+			
+			
+			MichelangeloCamera.saveBitmap(
+					MichelangeloCamera.grayMatToBitmap(combine),
+					"combined");
+			
 			// Calculate disparities of original
 			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
 			// 13);
