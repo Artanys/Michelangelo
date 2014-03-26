@@ -184,12 +184,39 @@ public class DepthMapper implements Callable<Bitmap> {
 			//for (int i = 0; i < rightKPDesc.rows(); i++) {
 				// if (matchesArray[i].distance < Math.max(.02, 5 * min_dist)) {
 				// if (matchesArray[i].distance < (.6 * max_dist)) {
-			for (int i = 0; i < featMatchesList.size(); i ++ ) {
+			/*for (int i = 0; i < featMatchesList.size(); i ++ ) {
 				DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
 				if ( matchesArray1[0].distance < (.8 * matchesArray1[1].distance )) {
 					goodMatchesList.addLast(matchesArray1[0]);
 				}
+			}*/
+			
+			double tresholdDist = 0.25 * Math.sqrt((double)(mMatLeft.size().height*mMatLeft.size().height + mMatLeft.size().width*mMatLeft.size().width));
+
+			for (int i = 0; i < featMatchesList.size(); ++i) { 
+				DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
+			    for (int j = 0; j < matchesArray1.length; j++)
+			    {
+			    	DMatch possibleMatch = matchesArray1[j];
+			        Point from = leftKP.toArray()[possibleMatch.queryIdx].pt;
+			        Point to = rightKP.toArray()[possibleMatch.trainIdx].pt;
+			        //Point to = keypoints_2[matches[i][j].trainIdx].pt;
+
+			        //calculate local distance for each possible match
+			        double dist = Math.sqrt((from.x - to.x) * (from.x - to.x) + (from.y - to.y) * (from.y - to.y));
+
+			        //save as best match if local distance is in specified area and on same height
+			        if (dist < tresholdDist && Math.abs(from.y-to.y)<5)
+			        {
+			            goodMatchesList.addLast(possibleMatch);
+			            //j = matches[i].size();
+			            break;
+			        }
+			    }
 			}
+			
+			
+			
 			MatOfDMatch goodMatches = new MatOfDMatch();
 			goodMatches.fromList(goodMatchesList);
 
@@ -321,14 +348,7 @@ public class DepthMapper implements Callable<Bitmap> {
 					MichelangeloCamera.grayMatToBitmap(rectifiedRightImage),
 					"rectifyright");
 
-			Mat combine = new Mat(mMatLeft.rows(), mMatLeft.cols() + mMatRight.cols(), mMatLeft.type());
-			for (int i=0;i<combine.cols();i++) {
-			    if (i < mMatLeft.cols()) {
-			        mMatLeft.col(i).copyTo(combine.col(i));
-			    } else {
-			    	mMatRight.col(i-mMatLeft.cols()).copyTo(combine.col(i));
-			    }
-			}
+			Mat combine = combineImages(mMatLeft, mMatRight);
 
 			for (int i = 0; i < goodKPLeft.size(); i++) {
 				Scalar color = new Scalar(randInt(0, 255), randInt(0, 255),
@@ -387,11 +407,28 @@ public class DepthMapper implements Callable<Bitmap> {
 			Log.w(TAG, "Rectified disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
 			MichelangeloCamera.saveBitmap(result, "disprectify");
+			
+
+			Mat combine2 = combineImages(rectifiedLeftImage, rectifiedRightImage);
+			MichelangeloCamera.saveBitmap(MichelangeloCamera.grayMatToBitmap(combine2), "rectCombined");
 		}
 
 		return result;
 	}
 
+	public Mat combineImages(Mat leftMat, Mat rightMat) {
+		Mat combine = new Mat(leftMat.rows(), leftMat.cols() + rightMat.cols(), leftMat.type());
+		for (int i=0;i<combine.cols();i++) {
+		    if (i < leftMat.cols()) {
+		        leftMat.col(i).copyTo(combine.col(i));
+		    } else {
+		    	rightMat.col(i-leftMat.cols()).copyTo(combine.col(i));
+		    }
+		}
+		return combine;
+	}
+	
+	
 	private void drawEpilines(Mat img1, Mat img2, Mat epilines1, Mat epilines2,
 			MatOfPoint2f points1, MatOfPoint2f points2) {
 		Mat outKPImage1 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
