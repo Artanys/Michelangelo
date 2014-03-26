@@ -19,14 +19,15 @@ public class MichelangeloSensor implements SensorEventListener {
 	private final float[] RadialOrientation = new float[16];
 	public final float[] Deg_orientation = new float[3];
 	public final float[] Rad_orientation = new float[3];
+	public final float[] internal_Deg_Orientation = new float[3];
 	
-	public int InitialYaw; //degrees
-	public int CaptureNumber;
-	public int NumberOfCaptures;
+	public float InitialYaw = 0; //degrees
+	public int CaptureNumber = 0;
+	public int NumberOfCaptures = 1;
 	
 	private final float PITCHTARGET = 25.0f;
 	private final float ROLLTARGET = 0;
-	private float YAWTARGET;
+	public float YAWTARGET;
 
 	public boolean prevRollReached = false;
 	public boolean prevPitchReached = false;
@@ -94,29 +95,50 @@ public class MichelangeloSensor implements SensorEventListener {
             
             SensorManager.getOrientation(mRotationMatrix, Rad_orientation);
             
-            YAWTARGET = InitialYaw + ((float) CaptureNumber / NumberOfCaptures ) * 360;
+            YAWTARGET = InitialYaw*DEG + ((float) CaptureNumber / NumberOfCaptures ) * 360;
             
             if(YAWTARGET >= 180){
-            	YAWTARGET -= 360;
+            	internal_Deg_Orientation[0] -= 360;
             }
             
-            Deg_orientation[0] = (int)(Rad_orientation[0]*DEG) - YAWTARGET;
-            Deg_orientation[1] = (int)(Rad_orientation[1]*DEG+90) - PITCHTARGET;
-            Deg_orientation[2] = (int)(Rad_orientation[2]*DEG) - ROLLTARGET;
+            if(( YAWTARGET > Rad_orientation[0]*DEG ) && (( Rad_orientation[0]*DEG - (int) YAWTARGET ) >= 360))
+            	YAWTARGET -= 360;
+            
+            if(( YAWTARGET < Rad_orientation[0]*DEG ) && (( Rad_orientation[0]*DEG - YAWTARGET ) <= -360))
+            	YAWTARGET += 360;
+            
+            internal_Deg_Orientation[0] = (int)(Rad_orientation[0]*DEG) - YAWTARGET;
+            internal_Deg_Orientation[1] = (int)(Rad_orientation[1]*DEG+90) - PITCHTARGET;
+            internal_Deg_Orientation[2] = (int)(Rad_orientation[2]*DEG) - ROLLTARGET;
+            
+			if( NumberOfCaptures == 1) {
+				Deg_orientation[0] = 0;
+			} else {
+				Deg_orientation[0] = internal_Deg_Orientation[0];
+			}
+			
+			if(Deg_orientation[0] >= 180)
+				Deg_orientation[0] -= 360;
+			
+			if(Deg_orientation[0] < -180)
+				Deg_orientation[0] += 360;
+			
+			Deg_orientation[1] = internal_Deg_Orientation[1];
+			Deg_orientation[2] = internal_Deg_Orientation[2];
 
-            if(( -1 <= Deg_orientation[1]) && ( 1 >= Deg_orientation[1] )) {
+            if(( -2 <= Deg_orientation[1]) && ( 2 >= Deg_orientation[1] )) {
             	PITCHREACHED = true;
             } else {
             	PITCHREACHED = false;
             }
             
-            if(( -1 <= Deg_orientation[2]) && ( 1 >= Deg_orientation[2] )) {
+            if(( -2 <= Deg_orientation[2]) && ( 2 >= Deg_orientation[2] )) {
             	ROLLREACHED = true;
             } else {
             	ROLLREACHED = false;
             }
             
-            if(( -1 <= Deg_orientation[0]) && ( 1 >= Deg_orientation[0] )) {
+            if(( -2 <= Deg_orientation[0]) && ( 2 >= Deg_orientation[0] )) {
             	YAWREACHED = true;
             } else {
             	YAWREACHED = false;

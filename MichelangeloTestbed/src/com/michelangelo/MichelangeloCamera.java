@@ -75,6 +75,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private Handler mHandler = null;
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
+	int cameraTimeCount;
 
 	//public Vibrator vibe; 
 	
@@ -90,28 +91,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		captureButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				// get an image from the camera
-				mCamera.autoFocus(null);
-				mCamera.takePicture(null, null, mPicture);
-				mSensor.CaptureNumber += 1;
-				if(mSensor.CaptureNumber == 1){
-					mSensor.InitialYaw = (int) mSensor.Deg_orientation[0];
-					mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
-					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
-					lastImage.setVisibility(View.VISIBLE);
-				}
-				if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
-					Context context = getApplicationContext();
-					CharSequence text = "Finished Image Capture Series!";
-					int duration = Toast.LENGTH_SHORT;
-
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-					
-					mSensor.CaptureNumber = 0;
-					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
-					lastImage.setVisibility(View.GONE);
-				}
+				takePicture();
 			}
 		});
 
@@ -135,7 +115,6 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	    {
 	      Log.e(TAG, "Cannot connect to OpenCV Manager");
 	    }
-		
 		final Handler handler = new Handler();
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -149,10 +128,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						TextView yawText = (TextView) findViewById(R.id.yaw_text);
 						TextView pitchText = (TextView) findViewById(R.id.pitch_text);
 						TextView rollText = (TextView) findViewById(R.id.roll_text);
-						alv.setAngle(mSensor.Rad_orientation[0]);
-						pitchLine.setAngle(mSensor.Rad_orientation[1]);
-						horizonLine.setAngle(mSensor.Rad_orientation[2]);
-						yawText.setText((int)mSensor.Deg_orientation[0] + "°");
+						yawText.setText((int)mSensor.Deg_orientation[0] + "° " + cameraTimeCount);
 						pitchText.setText((int)mSensor.Deg_orientation[1] + "°");
 						rollText.setText((int)mSensor.Deg_orientation[2] + "°"); 
 						float yaw = mSensor.Rad_orientation[0];
@@ -182,10 +158,23 @@ public class MichelangeloCamera extends MichelangeloUI implements
 							alv.paint.setColor(Color.GREEN);
 							yawText.setTextColor(Color.GREEN);
 							alvCircle.paint.setColor(Color.GREEN);
+							alvCircle.invalidate();
 						} else {
 							alv.paint.setColor(Color.LTGRAY);
 							yawText.setTextColor(Color.LTGRAY);
 							alvCircle.paint.setColor(Color.LTGRAY);
+							alvCircle.invalidate();
+						}
+						
+						if( mSensor.YAWREACHED && mSensor.ROLLREACHED && mSensor.PITCHREACHED ){
+							cameraTimeCount += 1;
+						} else {
+							cameraTimeCount = 0;
+						}
+						
+						if( cameraTimeCount == 12 ){
+							cameraTimeCount = 0;
+							takePicture();
 						}
 
 //						if(vibe.hasVibrator()) {
@@ -220,6 +209,33 @@ public class MichelangeloCamera extends MichelangeloUI implements
        
         Log.d(TAG, "Done creating Camera Page");
 
+	}
+	
+	public void takePicture() {
+		// get an image from the camera
+		mCamera.autoFocus(null);
+		mCamera.takePicture(null, null, mPicture);
+		mSensor.CaptureNumber += 1;
+		if(mSensor.CaptureNumber == 1){
+			mSensor.InitialYaw = mSensor.Rad_orientation[0];
+			mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
+			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+			lastImage.setVisibility(View.VISIBLE);
+		}
+		if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
+			Context context = getApplicationContext();
+			CharSequence text = "Finished Image Capture Series!";
+			int duration = Toast.LENGTH_SHORT;
+
+			Toast toast = Toast.makeText(context, text, duration);
+			toast.show();
+			
+			mSensor.CaptureNumber = 0;
+			mSensor.InitialYaw = 0;
+			mSensor.NumberOfCaptures = 1;
+			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+			lastImage.setVisibility(View.GONE);
+		}
 	}
 
 	/** A safe way to get an instance of the Camera object. */
