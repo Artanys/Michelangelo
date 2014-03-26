@@ -56,25 +56,29 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
     }
     public static final class drawable {
         public static final int check_mark=0x7f020000;
-        public static final int drawer_shadow=0x7f020001;
-        public static final int ic_action_accept=0x7f020002;
-        public static final int ic_action_discard=0x7f020003;
-        public static final int ic_action_share=0x7f020004;
-        public static final int ic_drawer=0x7f020005;
-        public static final int ic_launcher=0x7f020006;
-        public static final int ic_menu_archive=0x7f020007;
-        public static final int sample_0=0x7f020008;
-        public static final int sample_1=0x7f020009;
-        public static final int sample_2=0x7f02000a;
-        public static final int sample_3=0x7f02000b;
-        public static final int sample_4=0x7f02000c;
-        public static final int sample_5=0x7f02000d;
-        public static final int sample_6=0x7f02000e;
-        public static final int sample_7=0x7f02000f;
-        public static final int selector=0x7f020010;
+        public static final int cones1=0x7f020001;
+        public static final int cones2=0x7f020002;
+        public static final int drawer_shadow=0x7f020003;
+        public static final int ic_action_accept=0x7f020004;
+        public static final int ic_action_discard=0x7f020005;
+        public static final int ic_action_share=0x7f020006;
+        public static final int ic_drawer=0x7f020007;
+        public static final int ic_launcher=0x7f020008;
+        public static final int ic_menu_archive=0x7f020009;
+        public static final int sample_0=0x7f02000a;
+        public static final int sample_1=0x7f02000b;
+        public static final int sample_2=0x7f02000c;
+        public static final int sample_3=0x7f02000d;
+        public static final int sample_4=0x7f02000e;
+        public static final int sample_5=0x7f02000f;
+        public static final int sample_6=0x7f020010;
+        public static final int sample_7=0x7f020011;
+        public static final int selector=0x7f020012;
+        public static final int temple1=0x7f020013;
+        public static final int temple2=0x7f020014;
         /**  drawable 
          */
-        public static final int translucent_background=0x7f020011;
+        public static final int translucent_background=0x7f020015;
     }
     public static final class id {
         public static final int TextView02=0x7f0b001f;
