@@ -332,7 +332,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			FrameLayout imageBox = (FrameLayout) findViewById(R.id.camera_window);
 			LinearLayout overlayBox = (LinearLayout) findViewById(R.id.overlay);
 			mPreview.setVisibility(View.GONE);
-			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE, "original");
 			if (pictureFile == null) {
 				Log.d(TAG, "Error creating media file, check storage permissions");
 				return;
@@ -367,8 +367,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Mat grayMat = colorMatToGrayscale(ImageMat);
 			//saveBitmap(grayMatToBitmap(grayMat));
 			
-			Bitmap bmpCones1 = BitmapFactory.decodeResource(getResources(), R.drawable.cones1);
-			Bitmap bmpCones2 = BitmapFactory.decodeResource(getResources(), R.drawable.cones2);
+			Bitmap bmpCones1 = BitmapFactory.decodeResource(getResources(), R.drawable.temple1);
+			Bitmap bmpCones2 = BitmapFactory.decodeResource(getResources(), R.drawable.temple2);
 			Mat matCones1 = bitmapToMat(bmpCones1);
 			Mat matCones2 = bitmapToMat(bmpCones2);
 			Mat grayCones1 = colorMatToGrayscale(matCones1);
@@ -389,13 +389,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mDMList = new ArrayList<DepthMapper>();
 			if (mTaskList == null)
 				mTaskList = new ArrayList<Future<Bitmap>>();
-			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight, grayMat);
+			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight, grayCones1);
 			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
 			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
 			if (mDMList.size() > 0) {
 				mDMList.get(mDMList.size() - 1).setRightData(y2D, bmWidth,
-						bmHeight, grayMat);
+						bmHeight, grayCones2);
 				mTaskList
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
@@ -404,7 +404,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	};
 
 	/** Create a File for saving an image or video */
-	private static File getOutputMediaFile(int type) {
+	private static File getOutputMediaFile(int type, String tag) {
 		// To be safe, you should check that the SDCard is mounted
 		// using Environment.getExternalStorageState() before doing this.
 
@@ -429,7 +429,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		File mediaFile;
 		if (type == MEDIA_TYPE_IMAGE) {
 			mediaFile = new File(mediaStorageDir.getPath() + File.separator
-					+ "IMG_" + timeStamp + ".jpg");
+					+ "IMG_" + timeStamp + tag + ".jpg");
 		} else if (type == MEDIA_TYPE_VIDEO) {
 			mediaFile = new File(mediaStorageDir.getPath() + File.separator
 					+ "VID_" + timeStamp + ".mp4");
@@ -652,8 +652,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		return bmpResult;
 	}
 
-	public static void saveBitmap(Bitmap bitmap) {
-		File resultFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+	public static void saveBitmap(Bitmap bitmap, String tag) {
+		File resultFile = getOutputMediaFile(MEDIA_TYPE_IMAGE, tag);
 		if (resultFile == null) {
 			Log.d(TAG, "Error creating media file, check storage permissions");
 			return;
