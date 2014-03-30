@@ -143,7 +143,7 @@ public class DepthMapper implements Callable<Bitmap> {
 		if (generateDepthMap()) {
 			// Detect features
 			FeatureDetector orbDetector = FeatureDetector
-					.create(FeatureDetector.FAST);
+					.create(FeatureDetector.ORB);
 			MatOfKeyPoint leftKP = new MatOfKeyPoint();
 			MatOfKeyPoint rightKP = new MatOfKeyPoint();
 			orbDetector.detect(mMatLeft, leftKP);
@@ -186,48 +186,53 @@ public class DepthMapper implements Callable<Bitmap> {
 			// for (int i = 0; i < rightKPDesc.rows(); i++) {
 			// if (matchesArray[i].distance < Math.max(.02, 5 * min_dist)) {
 			// if (matchesArray[i].distance < (.6 * max_dist)) {
-			/*
-			 * for (int i = 0; i < featMatchesList.size(); i ++ ) { DMatch[]
-			 * matchesArray1 = featMatchesList.get(i).toArray(); if (
-			 * matchesArray1[0].distance < (.8 * matchesArray1[1].distance )) {
-			 * goodMatchesList.addLast(matchesArray1[0]); } } for (int i = 0; i
-			 * < featMatchesList.size(); i++) { DMatch[] matchesArray1 =
-			 * featMatchesList.get(i).toArray(); if (matchesArray1[0].distance <
-			 * ((.05 + .05 * j) * matchesArray1[1].distance)) { DMatch[]
-			 * matchesArray2 = featMatchesListReverse.get(
-			 * matchesArray1[0].trainIdx).toArray(); if
-			 * (matchesArray2[0].trainIdx == matchesArray1[0].queryIdx) {
-			 * goodMatchesList.addLast(matchesArray1[0]); } } }
-			 */
 
-			double tresholdDist = 0.25 * Math
-					.sqrt((double) (mMatLeft.size().height
-							* mMatLeft.size().height + mMatLeft.size().width
-							* mMatLeft.size().width));
-
-			KeyPoint[] leftKPArray = leftKP.toArray();
-			KeyPoint[] rightKPArray = rightKP.toArray();
-			for (int i = 0; i < featMatchesList.size(); ++i) {
+			// for (int i = 0; i < featMatchesList.size(); i++) {
+			// DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
+			// if (matchesArray1[0].distance < (.8 * matchesArray1[1].distance))
+			// {
+			// goodMatchesList.addLast(matchesArray1[0]);
+			// }
+			// }
+			for (int i = 0; i < featMatchesList.size(); i++) {
 				DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
-				for (int j = 0; j < matchesArray1.length; j++) {
-					DMatch possibleMatch = matchesArray1[j];
-					Point from = leftKPArray[possibleMatch.queryIdx].pt;
-					Point to = rightKPArray[possibleMatch.trainIdx].pt;
-					// Point to = keypoints_2[matches[i][j].trainIdx].pt;
-
-					// calculate local distance for each possible match
-					double dist = Math.sqrt((from.x - to.x) * (from.x - to.x)
-							+ (from.y - to.y) * (from.y - to.y));
-
-					// save as best match if local distance is in specified area
-					// and on same height
-					if (dist < tresholdDist && Math.abs(from.y - to.y) < 25) {
-						goodMatchesList.addLast(possibleMatch);
-						// j = matches[i].size();
-						break;
+				if (matchesArray1[0].distance < (.8 * matchesArray1[1].distance)) {
+					DMatch[] matchesArray2 = featMatchesListReverse.get(
+							matchesArray1[0].trainIdx).toArray();
+					if (matchesArray2[0].trainIdx == matchesArray1[0].queryIdx) {
+						goodMatchesList.addLast(matchesArray1[0]);
 					}
 				}
 			}
+
+			// double tresholdDist = 0.25 * Math
+			// .sqrt((double) (mMatLeft.size().height
+			// * mMatLeft.size().height + mMatLeft.size().width
+			// * mMatLeft.size().width));
+			//
+			// KeyPoint[] leftKPArray = leftKP.toArray();
+			// KeyPoint[] rightKPArray = rightKP.toArray();
+			// for (int i = 0; i < featMatchesList.size(); ++i) {
+			// DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
+			// for (int j = 0; j < matchesArray1.length; j++) {
+			// DMatch possibleMatch = matchesArray1[j];
+			// Point from = leftKPArray[possibleMatch.queryIdx].pt;
+			// Point to = rightKPArray[possibleMatch.trainIdx].pt;
+			// // Point to = keypoints_2[matches[i][j].trainIdx].pt;
+			//
+			// // calculate local distance for each possible match
+			// double dist = Math.sqrt((from.x - to.x) * (from.x - to.x)
+			// + (from.y - to.y) * (from.y - to.y));
+			//
+			// // save as best match if local distance is in specified area
+			// // and on same height
+			// if (dist < tresholdDist && Math.abs(from.y - to.y) < 25) {
+			// goodMatchesList.addLast(possibleMatch);
+			// // j = matches[i].size();
+			// break;
+			// }
+			// }
+			// }
 
 			MatOfDMatch goodMatches = new MatOfDMatch();
 			goodMatches.fromList(goodMatchesList);
@@ -354,11 +359,15 @@ public class DepthMapper implements Callable<Bitmap> {
 					rectMat1, mCameraMatrix, mMatLeft.size(), CvType.CV_16SC2,
 					mapMat1, mapMat2);
 			Mat rectifiedLeftImage = new Mat(mapMat1.size(), CvType.CV_8UC1);
+			Mat rectifiedEpilineLeftImage = new Mat(mapMat1.size(),
+					CvType.CV_8UC1);
 			Mat rectifiedShearLeftImage = new Mat(mapMat1.size(),
+					CvType.CV_8UC1);
+			Mat rectifiedShearEpilineLeftImage = new Mat(mapMat1.size(),
 					CvType.CV_8UC1);
 			// Imgproc.cvtColor(mMatLeft, rgbaOrigImage,
 			// Imgproc.COLOR_GRAY2RGBA);
-			Imgproc.remap(epilineLeft, rectifiedLeftImage, mapMat1, mapMat2,
+			Imgproc.remap(mMatLeft, rectifiedLeftImage, mapMat1, mapMat2,
 					Imgproc.INTER_LINEAR);
 
 			// Right remap and rectify
@@ -368,9 +377,13 @@ public class DepthMapper implements Callable<Bitmap> {
 					rectMat2, mCameraMatrix, mMatLeft.size(), CvType.CV_16SC2,
 					mapMat3, mapMat4);
 			Mat rectifiedRightImage = new Mat(mapMat3.size(), CvType.CV_8UC1);
+			Mat rectifiedEpilineRightImage = new Mat(mapMat3.size(),
+					CvType.CV_8UC1);
 			Mat rectifiedShearRightImage = new Mat(mapMat3.size(),
 					CvType.CV_8UC1);
-			Imgproc.remap(epilineRight, rectifiedRightImage, mapMat3, mapMat4,
+			Mat rectifiedShearEpilineRightImage = new Mat(mapMat3.size(),
+					CvType.CV_8UC1);
+			Imgproc.remap(mMatRight, rectifiedRightImage, mapMat3, mapMat4,
 					Imgproc.INTER_LINEAR);
 
 			// MichelangeloCamera.saveBitmap(
@@ -409,12 +422,18 @@ public class DepthMapper implements Callable<Bitmap> {
 					MichelangeloCamera.grayMatToBitmap(combine2),
 					"rectCombined");
 
-			Imgproc.warpPerspective(epilineLeft, rectifiedLeftImage, H1,
+			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
 					mMatLeft.size());
-			Imgproc.warpPerspective(epilineRight, rectifiedRightImage, H2,
+			Imgproc.warpPerspective(mMatRight, rectifiedRightImage, H2,
 					mMatRight.size());
 
-			combine2 = combineImages(rectifiedLeftImage, rectifiedRightImage);
+			Imgproc.warpPerspective(epilineLeft, rectifiedEpilineLeftImage, H1,
+					mMatLeft.size());
+			Imgproc.warpPerspective(epilineRight, rectifiedEpilineRightImage,
+					H2, mMatRight.size());
+
+			combine2 = combineImages(rectifiedEpilineLeftImage,
+					rectifiedEpilineRightImage);
 			MichelangeloCamera.saveBitmap(
 					MichelangeloCamera.grayMatToBitmap(combine2),
 					"rectWarpCombined");
@@ -574,8 +593,13 @@ public class DepthMapper implements Callable<Bitmap> {
 			Imgproc.warpPerspective(rectifiedRightImage,
 					rectifiedShearRightImage, H2s, mMatRight.size());
 
-			combine2 = combineImages(rectifiedShearLeftImage,
-					rectifiedRightImage);
+			Imgproc.warpPerspective(rectifiedEpilineLeftImage,
+					rectifiedShearEpilineLeftImage, H1s, mMatLeft.size());
+			Imgproc.warpPerspective(rectifiedEpilineRightImage,
+					rectifiedShearEpilineRightImage, H2s, mMatRight.size());
+
+			combine2 = combineImages(rectifiedShearEpilineLeftImage,
+					rectifiedEpilineRightImage);
 			MichelangeloCamera.saveBitmap(
 					MichelangeloCamera.grayMatToBitmap(combine2),
 					"rectWarpShearCombined");
@@ -664,6 +688,7 @@ public class DepthMapper implements Callable<Bitmap> {
 
 	private Mat drawEpilines(Mat img, Mat epilines, MatOfPoint2f points) {
 		Mat epilineImage = new Mat(mMatLeft.size(), CvType.CV_8UC1);
+		img.copyTo(epilineImage);
 		List<Point> pointList = points.toList();
 		Scalar color = new Scalar(127, 127, 127, 255);
 		for (int i = 0; i < epilines.rows(); i++) {
