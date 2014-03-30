@@ -5,7 +5,7 @@
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_michelangelo_camera">Michelangelo</string>
-    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_button">Capture Image</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_michelangelo_gallery">Gallery</string>
     <string name="title_activity_michelangelo_help">Help</string>

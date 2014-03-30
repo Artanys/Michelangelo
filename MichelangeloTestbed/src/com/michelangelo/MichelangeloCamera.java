@@ -131,7 +131,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		);
 		
 		Log.i(TAG, "Trying to load OpenCV library");
-	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_2, this, mOpenCVCallback))
+	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_8, this, mOpenCVCallback))
 	    {
 	      Log.e(TAG, "Cannot connect to OpenCV Manager");
 	    }
@@ -367,8 +367,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Mat grayMat = colorMatToGrayscale(ImageMat);
 			//saveBitmap(grayMatToBitmap(grayMat));
 			
-			Bitmap bmpCones1 = BitmapFactory.decodeResource(getResources(), R.drawable.temple1);
-			Bitmap bmpCones2 = BitmapFactory.decodeResource(getResources(), R.drawable.temple2);
+			Bitmap bmpCones1 = BitmapFactory.decodeResource(getResources(), R.drawable.cones1);
+			Bitmap bmpCones2 = BitmapFactory.decodeResource(getResources(), R.drawable.cones2);
 			Mat matCones1 = bitmapToMat(bmpCones1);
 			Mat matCones2 = bitmapToMat(bmpCones2);
 			Mat grayCones1 = colorMatToGrayscale(matCones1);
@@ -376,8 +376,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			//saveBitmap(grayMatToBitmap(grayCones1));
 			//saveBitmap(grayMatToBitmap(grayCones2));
 
-			int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
-			int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
+			//int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
+			//int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
 
 			// Debug.startMethodTracing();
 
@@ -389,12 +389,12 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mDMList = new ArrayList<DepthMapper>();
 			if (mTaskList == null)
 				mTaskList = new ArrayList<Future<Bitmap>>();
-			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight, grayCones1);
+			DepthMapper dm = new DepthMapper(bmWidth, bmHeight, grayCones1);
 			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
 			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
 			if (mDMList.size() > 0) {
-				mDMList.get(mDMList.size() - 1).setRightData(y2D, bmWidth,
+				mDMList.get(mDMList.size() - 1).setRightData(bmWidth,
 						bmHeight, grayCones2);
 				mTaskList
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
@@ -545,7 +545,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			List<Size> sizes = params.getSupportedPictureSizes();
 			int maxSize = Integer.MAX_VALUE;
 			Size minSize = null;
-			// Size medSize = sizes.get(sizes.size() / 2);
+			Size medSize = sizes.get(sizes.size() / 2);
+			Size maxSizeIndex = sizes.get(0);
 			for (Size size : sizes) {
 				if (size.height * size.width < maxSize) {
 					minSize = size;
@@ -553,8 +554,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			}
 			
 			params.setPictureSize(minSize.width, minSize.height);
-			// params.setPictureSize(medSize.width, medSize.height);
-			params.setPreviewSize(params.getPictureSize().width, params.getPictureSize().height);
+			//params.setPictureSize(medSize.width, medSize.height);
+			//params.setPictureSize(maxSizeIndex.width, maxSizeIndex.height);
+			//params.setPreviewSize(params.getPictureSize().width, params.getPictureSize().height);
+			params.setPreviewSize(minSize.width, minSize.height);
 			mCamera.setParameters(params);
 			Log.w(TAG, "Picture size: width = " + params.getPreviewSize().width + " height = "
 					+ params.getPreviewSize().height);
