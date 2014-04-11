@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -63,10 +64,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
 	public static int NUM_IMAGES = 8;
-	
+
 	public static final long pulse_duration = 100;
 	public static final long pulse_off_duration = 600;
-	
+
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
 	private ExecutorService mExecutor = null;
@@ -76,15 +77,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
 
-	//public Vibrator vibe; 
-	
-	
+	// public Vibrator vibe;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.activity_michelangelo_camera);
 		super.onCreate(savedInstanceState);
-		//vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-		//if(vibe.hasVibrator()) vibe.vibrate(new long[]{0, pulse_duration, pulse_off_duration}, 0);
+		// vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		// if(vibe.hasVibrator()) vibe.vibrate(new long[]{0, pulse_duration,
+		// pulse_off_duration}, 0);
 
 		Button captureButton = (Button) findViewById(R.id.button_capture);
 		captureButton.setOnClickListener(new View.OnClickListener() {
@@ -94,20 +95,20 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mCamera.autoFocus(null);
 				mCamera.takePicture(null, null, mPicture);
 				mSensor.CaptureNumber += 1;
-				if(mSensor.CaptureNumber == 1){
+				if (mSensor.CaptureNumber == 1) {
 					mSensor.InitialYaw = (int) mSensor.Deg_orientation[0];
 					mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
 					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 					lastImage.setVisibility(View.VISIBLE);
 				}
-				if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
+				if (mSensor.CaptureNumber == mSensor.NumberOfCaptures) {
 					Context context = getApplicationContext();
 					CharSequence text = "Finished Image Capture Series!";
 					int duration = Toast.LENGTH_SHORT;
 
 					Toast toast = Toast.makeText(context, text, duration);
 					toast.show();
-					
+
 					mSensor.CaptureNumber = 0;
 					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 					lastImage.setVisibility(View.GONE);
@@ -118,24 +119,22 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		getActionBar().setDisplayShowHomeEnabled(true);
 		getActionBar().setHomeButtonEnabled(true);
-		
+
 		FrameLayout cameraPreview = (FrameLayout) findViewById(R.id.camera_window);
-		cameraPreview.setOnClickListener(
-			new View.OnClickListener() {
-		        @Override
-		        public void onClick(View v) {
-		            // get an image from the camera
-		        	mCamera.autoFocus(null);
-		        }
-		    }
-		);
-		
+		cameraPreview.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// get an image from the camera
+				mCamera.autoFocus(null);
+			}
+		});
+
 		Log.i(TAG, "Trying to load OpenCV library");
-	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_8, this, mOpenCVCallback))
-	    {
-	      Log.e(TAG, "Cannot connect to OpenCV Manager");
-	    }
-		
+		if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_8, this,
+				mOpenCVCallback)) {
+			Log.e(TAG, "Cannot connect to OpenCV Manager");
+		}
+
 		final Handler handler = new Handler();
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -152,33 +151,34 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						alv.setAngle(mSensor.Rad_orientation[0]);
 						pitchLine.setAngle(mSensor.Rad_orientation[1]);
 						horizonLine.setAngle(mSensor.Rad_orientation[2]);
-						yawText.setText((int)mSensor.Deg_orientation[0] + "°");
-						pitchText.setText((int)mSensor.Deg_orientation[1] + "°");
-						rollText.setText((int)mSensor.Deg_orientation[2] + "°"); 
+						yawText.setText((int) mSensor.Deg_orientation[0] + "°");
+						pitchText.setText((int) mSensor.Deg_orientation[1]
+								+ "°");
+						rollText.setText((int) mSensor.Deg_orientation[2] + "°");
 						float yaw = mSensor.Rad_orientation[0];
 						float pitch = mSensor.Rad_orientation[1];
 						float roll = mSensor.Rad_orientation[2];
 						alv.setAngle(yaw);
 						pitchLine.setAngle(pitch);
 						horizonLine.setAngle(roll);
-						
-						if( mSensor.PITCHREACHED ){
+
+						if (mSensor.PITCHREACHED) {
 							pitchLine.paint.setColor(Color.GREEN);
 							pitchText.setTextColor(Color.GREEN);
 						} else {
 							pitchLine.paint.setColor(Color.LTGRAY);
 							pitchText.setTextColor(Color.LTGRAY);
 						}
-						
-						if( mSensor.ROLLREACHED ){
+
+						if (mSensor.ROLLREACHED) {
 							horizonLine.paint.setColor(Color.GREEN);
 							rollText.setTextColor(Color.GREEN);
 						} else {
 							horizonLine.paint.setColor(Color.LTGRAY);
 							rollText.setTextColor(Color.LTGRAY);
 						}
-						
-						if( mSensor.YAWREACHED ){
+
+						if (mSensor.YAWREACHED) {
 							alv.paint.setColor(Color.GREEN);
 							yawText.setTextColor(Color.GREEN);
 							alvCircle.paint.setColor(Color.GREEN);
@@ -188,37 +188,40 @@ public class MichelangeloCamera extends MichelangeloUI implements
 							alvCircle.paint.setColor(Color.LTGRAY);
 						}
 
-//						if(vibe.hasVibrator()) {
-//							long[] pattern = new long[3];
-//							pattern[1] = pulse_duration; //100 ms on
-//							pattern[2] = pulse_off_duration; //900 ms of off
-//							
-//							if(mSensor.ROLLREACHED) pattern[2] *= 2;
-//							if(mSensor.PITCHREACHED) pattern[2] *= 2;
-//							if(mSensor.YAWREACHED) pattern[2] *= 2;
-//							if(mSensor.ROLLREACHED && mSensor.PITCHREACHED && mSensor.YAWREACHED) {
-//								vibe.cancel();
-//							}else if(mSensor.ROLLREACHED != mSensor.prevRollReached || mSensor.PITCHREACHED != mSensor.prevPitchReached
-//									|| mSensor.YAWREACHED != mSensor.prevYawReached) {
-//								vibe.cancel();
-//								vibe.vibrate(pattern, 0);
-//							}
-//						
-//						}
-//						mSensor.prevRollReached = mSensor.ROLLREACHED;
-//						mSensor.prevPitchReached = mSensor.PITCHREACHED;
-//						mSensor.prevYawReached = mSensor.YAWREACHED;
+						// if(vibe.hasVibrator()) {
+						// long[] pattern = new long[3];
+						// pattern[1] = pulse_duration; //100 ms on
+						// pattern[2] = pulse_off_duration; //900 ms of off
+						//
+						// if(mSensor.ROLLREACHED) pattern[2] *= 2;
+						// if(mSensor.PITCHREACHED) pattern[2] *= 2;
+						// if(mSensor.YAWREACHED) pattern[2] *= 2;
+						// if(mSensor.ROLLREACHED && mSensor.PITCHREACHED &&
+						// mSensor.YAWREACHED) {
+						// vibe.cancel();
+						// }else if(mSensor.ROLLREACHED !=
+						// mSensor.prevRollReached || mSensor.PITCHREACHED !=
+						// mSensor.prevPitchReached
+						// || mSensor.YAWREACHED != mSensor.prevYawReached) {
+						// vibe.cancel();
+						// vibe.vibrate(pattern, 0);
+						// }
+						//
+						// }
+						// mSensor.prevRollReached = mSensor.ROLLREACHED;
+						// mSensor.prevPitchReached = mSensor.PITCHREACHED;
+						// mSensor.prevYawReached = mSensor.YAWREACHED;
 					}
 				});
 			}
-		},125,125);
-		
-        releaseCamera();
-        grabCamera();
-        mSensor = new MichelangeloSensor();
-        mSensor.onCreate(this);
-       
-        Log.d(TAG, "Done creating Camera Page");
+		}, 125, 125);
+
+		releaseCamera();
+		grabCamera();
+		mSensor = new MichelangeloSensor();
+		mSensor.onCreate(this);
+
+		Log.d(TAG, "Done creating Camera Page");
 
 	}
 
@@ -334,7 +337,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mPreview.setVisibility(View.GONE);
 			File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE, "original");
 			if (pictureFile == null) {
-				Log.d(TAG, "Error creating media file, check storage permissions");
+				Log.d(TAG,
+						"Error creating media file, check storage permissions");
 				return;
 			}
 
@@ -349,35 +353,40 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			}
 			mPreview.setVisibility(View.VISIBLE);
 
-			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);			
+			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
 			int width = imageBox.getWidth();
 			int height = imageBox.getHeight();
-			
+
 			Matrix mat = new Matrix();
 			mat.postRotate(90);
-			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
-			Bitmap bitmapResized = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
-			bitmapLast = Bitmap.createBitmap(bitmapResized, lastImageBox.getLeft() + overlayBox.getLeft(), lastImageBox.getTop() 
-					+ overlayBox.getTop(), lastImage.getWidth(), lastImage.getHeight());
+			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,
+					bitmap.getWidth(), bitmap.getHeight(), mat, true);
+			Bitmap bitmapResized = Bitmap.createScaledBitmap(bitmapRot, width,
+					height, true);
+			bitmapLast = Bitmap.createBitmap(bitmapResized,
+					lastImageBox.getLeft() + overlayBox.getLeft(),
+					lastImageBox.getTop() + overlayBox.getTop(),
+					lastImage.getWidth(), lastImage.getHeight());
 			lastImage.setImageBitmap(bitmapLast);
-			
+
 			int bmWidth = bitmapRot.getWidth();
 			int bmHeight = bitmapRot.getHeight();
 			Mat ImageMat = bitmapToMat(bitmapRot);
 			Mat grayMat = colorMatToGrayscale(ImageMat);
-			//saveBitmap(grayMatToBitmap(grayMat));
-			
-			Bitmap bmpCones1 = BitmapFactory.decodeResource(getResources(), R.drawable.cones1);
-			Bitmap bmpCones2 = BitmapFactory.decodeResource(getResources(), R.drawable.cones2);
-			Mat matCones1 = bitmapToMat(bmpCones1);
-			Mat matCones2 = bitmapToMat(bmpCones2);
-			Mat grayCones1 = colorMatToGrayscale(matCones1);
-			Mat grayCones2 = colorMatToGrayscale(matCones2);
-			//saveBitmap(grayMatToBitmap(grayCones1));
-			//saveBitmap(grayMatToBitmap(grayCones2));
+			// saveBitmap(grayMatToBitmap(grayMat));
 
-			//int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
-			//int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
+			int templeArray[] = { R.drawable.temple1, R.drawable.temple2,
+					R.drawable.temple3, R.drawable.temple4, R.drawable.temple5,
+					R.drawable.temple6, R.drawable.temple7, R.drawable.temple8,
+					R.drawable.temple9, R.drawable.temple10,
+					R.drawable.temple11, R.drawable.temple12,
+					R.drawable.temple13, R.drawable.temple14,
+					R.drawable.temple15 };
+			// saveBitmap(grayMatToBitmap(grayCones1));
+			// saveBitmap(grayMatToBitmap(grayCones2));
+
+			// int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
+			// int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
 
 			// Debug.startMethodTracing();
 
@@ -389,18 +398,45 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mDMList = new ArrayList<DepthMapper>();
 			if (mTaskList == null)
 				mTaskList = new ArrayList<Future<Bitmap>>();
-			DepthMapper dm = new DepthMapper(bmWidth, bmHeight, grayCones1);
-			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
-			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
-			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
-			if (mDMList.size() > 0) {
-				mDMList.get(mDMList.size() - 1).setRightData(bmWidth,
-						bmHeight, grayCones2);
-				mTaskList
-						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
+			Parameters params = mCamera.getParameters();
+			float focalLength = params.getFocalLength();
+
+			for (int i = 0; i < 15; i++) {
+				Bitmap bmpSample1 = BitmapFactory
+						.decodeResource(getResources(),
+								templeArray[(mDMList.size() + 14) % 15]);
+				Bitmap bmpSample2 = BitmapFactory.decodeResource(
+						getResources(), templeArray[mDMList.size() % 15]);
+				Mat matSample1 = bitmapToMat(bmpSample1);
+				Mat matSample2 = bitmapToMat(bmpSample2);
+				Mat graySample1 = colorMatToGrayscale(matSample1);
+				Mat graySample2 = colorMatToGrayscale(matSample2);
+
+				DepthMapper dm = new DepthMapper((int) (focalLength * 10),
+						bmHeight, graySample1);
+				// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth,
+				// bmHeight));
+				dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
+				dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
+				mDMList.add(dm);
+				if (mDMList.size() > 0) {
+					mDMList.get(mDMList.size() - 1).setRightData(bmWidth,
+							bmHeight, graySample2);
+					mTaskList
+							.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
+				}
+
+				try {
+					mTaskList.get(mTaskList.size() - 1).get();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-			mDMList.add(dm);
-		}			
+		}
 	};
 
 	/** Create a File for saving an image or video */
@@ -439,7 +475,6 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 		return mediaFile;
 	}
-	
 
 	/** Create a File for saving an image or video */
 	public static ArrayList<File> getMediaFiles() {
@@ -447,7 +482,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		// using Environment.getExternalStorageState() before doing this.
 
 		ArrayList<File> matchingFiles = new ArrayList<File>();
-		
+
 		File mediaStorageDir = new File(
 				Environment
 						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
@@ -458,21 +493,19 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		// Create the storage directory if it does not exist
 		if (!mediaStorageDir.exists()) {
 			Log.d("MichelangeloCamera", "media Directory doesn't exist!");
-			return matchingFiles;		
+			return matchingFiles;
 		}
 
+		File[] files = mediaStorageDir.listFiles();
 
-	    File[] files = mediaStorageDir.listFiles();
-
-	    for (File file : files) {
-	    	if(file.getName().endsWith(".jpg")){
-	    		matchingFiles.add(file);
-	        }
-	    }
+		for (File file : files) {
+			if (file.getName().endsWith(".jpg")) {
+				matchingFiles.add(file);
+			}
+		}
 
 		return matchingFiles;
 	}
-	
 
 	public static void setCameraDisplayOrientation(Activity activity,
 			int cameraId, android.hardware.Camera camera) {
@@ -509,7 +542,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	@Override
 	protected void onPause() {
 		super.onPause();
-		//vibe.cancel(); //turn off the vibration
+		// vibe.cancel(); //turn off the vibration
 		releaseCamera(); // release the camera immediately on pause event
 		mSensor.onPause();
 	}
@@ -525,7 +558,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		//vibe.cancel(); //turn off the vibration
+		// vibe.cancel(); //turn off the vibration
 		releaseCamera(); // release the camera immediately on pause event
 		mSensor.onDestroy();
 	}
@@ -552,15 +585,16 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					minSize = size;
 				}
 			}
-			
+
 			params.setPictureSize(minSize.width, minSize.height);
-			//params.setPictureSize(medSize.width, medSize.height);
-			//params.setPictureSize(maxSizeIndex.width, maxSizeIndex.height);
-			//params.setPreviewSize(params.getPictureSize().width, params.getPictureSize().height);
+			// params.setPictureSize(medSize.width, medSize.height);
+			// params.setPictureSize(maxSizeIndex.width, maxSizeIndex.height);
+			// params.setPreviewSize(params.getPictureSize().width,
+			// params.getPictureSize().height);
 			params.setPreviewSize(minSize.width, minSize.height);
 			mCamera.setParameters(params);
-			Log.w(TAG, "Picture size: width = " + params.getPreviewSize().width + " height = "
-					+ params.getPreviewSize().height);
+			Log.w(TAG, "Picture size: width = " + params.getPreviewSize().width
+					+ " height = " + params.getPreviewSize().height);
 			// Create our Preview view and set it as the content of our
 			// activity.
 			FrameLayout preview = (FrameLayout) findViewById(R.id.camera_window);
@@ -628,29 +662,32 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		c.drawBitmap(bmpOriginal, 0, 0, paint);
 		return bmpGrayscale;
 	}
-	
+
 	public Mat bitmapToMat(Bitmap bmpOriginal) {
-		Mat bmpMat = new Mat ( bmpOriginal.getHeight(), bmpOriginal.getWidth(), CvType.CV_8U, new Scalar(4));
+		Mat bmpMat = new Mat(bmpOriginal.getHeight(), bmpOriginal.getWidth(),
+				CvType.CV_8U, new Scalar(4));
 		Utils.bitmapToMat(bmpOriginal, bmpMat);
 		return bmpMat;
 	}
-	
+
 	public Mat colorMatToGrayscale(Mat matColor) {
-		Mat grayMat = new Mat ( matColor.rows(), matColor.cols(), CvType.CV_8UC1);
+		Mat grayMat = new Mat(matColor.rows(), matColor.cols(), CvType.CV_8UC1);
 		Imgproc.cvtColor(matColor, grayMat, Imgproc.COLOR_RGBA2GRAY);
 		return grayMat;
 	}
-	
+
 	public static Bitmap grayMatToBitmap(Mat matOrig) {
-		Bitmap bmpResult = Bitmap.createBitmap(matOrig.cols(), matOrig.rows(), Bitmap.Config.ARGB_8888);
+		Bitmap bmpResult = Bitmap.createBitmap(matOrig.cols(), matOrig.rows(),
+				Bitmap.Config.ARGB_8888);
 		Mat temp = new Mat(matOrig.rows(), matOrig.cols(), CvType.CV_8UC4);
 		Imgproc.cvtColor(matOrig, temp, Imgproc.COLOR_GRAY2RGBA, 4);
 		Utils.matToBitmap(matOrig, bmpResult);
 		return bmpResult;
 	}
-	
+
 	public static Bitmap colorMatToBitmap(Mat matOrig) {
-		Bitmap bmpResult = Bitmap.createBitmap(matOrig.cols(), matOrig.rows(), Bitmap.Config.ARGB_8888);
+		Bitmap bmpResult = Bitmap.createBitmap(matOrig.cols(), matOrig.rows(),
+				Bitmap.Config.ARGB_8888);
 		Utils.matToBitmap(matOrig, bmpResult);
 		return bmpResult;
 	}
@@ -704,16 +741,15 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		// User cancelled the dialog, don't update/start over
 
 	}
-	
+
 	private BaseLoaderCallback mOpenCVCallback = new BaseLoaderCallback(this) {
-	    @Override
-	    public void onManagerConnected(int status) {
-	        if (status == LoaderCallbackInterface.SUCCESS ) {
-	        	Log.i(TAG, "OpenCV loaded successfully");
-	        } else {
-	            super.onManagerConnected(status);
-	        }
-	    }
+		@Override
+		public void onManagerConnected(int status) {
+			if (status == LoaderCallbackInterface.SUCCESS) {
+				Log.i(TAG, "OpenCV loaded successfully");
+			} else {
+				super.onManagerConnected(status);
+			}
+		}
 	};
 }
-

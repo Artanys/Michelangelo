@@ -56,6 +56,7 @@ public class DepthMapper implements Callable<Bitmap> {
 
 	private Mat mCameraMatrix = new Mat(3, 3, CvType.CV_32FC1);
 	private Mat mDistCoeffs = new Mat(5, 1, CvType.CV_32FC1);
+	private Mat mQMatrix = new Mat(4, 4, CvType.CV_32FC1);
 	private List<Mat> mRvecs, mTvecs;
 
 	private interface FilterFunc {
@@ -71,6 +72,7 @@ public class DepthMapper implements Callable<Bitmap> {
 	private int[][] mResult = null;
 	private Mat mMatLeft = null;
 	private Mat mMatRight = null;
+	private int mFocalLength = 0;
 	private int mImgWidth = 0;
 	private int mImgHeight = 0;
 	private int mWindowWidth = 0;
@@ -81,6 +83,7 @@ public class DepthMapper implements Callable<Bitmap> {
 		mMatLeft = matLeft;
 		mImgWidth = width;
 		mImgHeight = height;
+		mFocalLength = width;
 		PIXEL_PRODUCTS = new int[256][256];
 		for (int i = 0; i < 256; i++) {
 			for (int j = 0; j < 256; j++) {
@@ -133,8 +136,11 @@ public class DepthMapper implements Callable<Bitmap> {
 		// float[] distMatVals = { 7.12093562e-002f, 1.53228194e-001f,
 		// 3.25737684e-003f, 2.18995404e-003f, -8.89789343e-001f };
 		float[] distMatVals = { 0.f, 0.f, 0.f, 0.f, 0.f };
+		float[] qMatVals = { 1.f, 0.f, 0.f, -320.f, 0.f, 1.f, 0.f, -439.f, 0.f,
+				0.f, 0.f, (float) mFocalLength / 10, 0.f, 0.f, (-1 / 150.f), 0.f };
 		mCameraMatrix.put(0, 0, camMatVals);
 		mDistCoeffs.put(0, 0, distMatVals);
+		mQMatrix.put(0, 0, qMatVals);
 	}
 
 	public Bitmap call() {
@@ -142,8 +148,16 @@ public class DepthMapper implements Callable<Bitmap> {
 
 		if (generateDepthMap()) {
 			// Detect features
+			// Imgproc.equalizeHist(mMatLeft, mMatLeft);
+			// Imgproc.equalizeHist(mMatRight, mMatRight);
+
+			Mat combineOrig = combineImages(mMatLeft, mMatRight);
+			MichelangeloCamera.saveBitmap(
+					MichelangeloCamera.grayMatToBitmap(combineOrig),
+					"origCombined");
+
 			FeatureDetector orbDetector = FeatureDetector
-					.create(FeatureDetector.ORB);
+					.create(FeatureDetector.FAST);
 			MatOfKeyPoint leftKP = new MatOfKeyPoint();
 			MatOfKeyPoint rightKP = new MatOfKeyPoint();
 			orbDetector.detect(mMatLeft, leftKP);
@@ -151,7 +165,7 @@ public class DepthMapper implements Callable<Bitmap> {
 
 			// Extract feature descriptors
 			DescriptorExtractor extractor = DescriptorExtractor
-					.create(DescriptorExtractor.ORB);
+					.create(DescriptorExtractor.BRIEF);
 			Mat leftKPDesc = new Mat();
 			Mat rightKPDesc = new Mat();
 			extractor.compute(mMatLeft, leftKP, leftKPDesc);
@@ -171,6 +185,23 @@ public class DepthMapper implements Callable<Bitmap> {
 			matcher.knnMatch(leftKPDesc, rightKPDesc, featMatchesList, 2);
 			matcher.knnMatch(rightKPDesc, leftKPDesc, featMatchesListReverse, 2);
 
+			// Save features to image
+
+			Mat outKPImage1 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
+			Mat outKPImage2 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
+			Features2d.drawKeypoints(mMatLeft, leftKP, outKPImage1, new Scalar(
+					0, 255, 0, 255), 0);
+			// MichelangeloCamera.saveBitmap(
+			// MichelangeloCamera.colorMatToBitmap(outKPImage), "leftkp");
+			Features2d.drawKeypoints(mMatRight, rightKP, outKPImage2,
+					new Scalar(255, 0, 0, 255), 0);
+			// MichelangeloCamera.saveBitmap(
+			// MichelangeloCamera.colorMatToBitmap(outKPImage), "rightkp");
+			Mat combineFeatures = combineImages(outKPImage1, outKPImage2);
+			MichelangeloCamera.saveBitmap(
+					MichelangeloCamera.colorMatToBitmap(combineFeatures),
+					"featuresCombined");
+
 			// Calculation of max and min distances between keypoints
 			float max_dist = 0;
 			float min_dist = 100;
@@ -189,14 +220,16 @@ public class DepthMapper implements Callable<Bitmap> {
 
 			// for (int i = 0; i < featMatchesList.size(); i++) {
 			// DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
-			// if (matchesArray1[0].distance < (.8 * matchesArray1[1].distance))
+			// if (matchesArray1[0].distance < (.8 *
+			// matchesArray1[1].distance))
 			// {
 			// goodMatchesList.addLast(matchesArray1[0]);
 			// }
 			// }
+
 			for (int i = 0; i < featMatchesList.size(); i++) {
 				DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
-				if (matchesArray1[0].distance < (.8 * matchesArray1[1].distance)) {
+				if (matchesArray1[0].distance < (.65 * matchesArray1[1].distance)) {
 					DMatch[] matchesArray2 = featMatchesListReverse.get(
 							matchesArray1[0].trainIdx).toArray();
 					if (matchesArray2[0].trainIdx == matchesArray1[0].queryIdx) {
@@ -237,21 +270,6 @@ public class DepthMapper implements Callable<Bitmap> {
 			MatOfDMatch goodMatches = new MatOfDMatch();
 			goodMatches.fromList(goodMatchesList);
 
-			Mat outKPImage1 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
-			Mat outKPImage2 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
-			Features2d.drawKeypoints(mMatLeft, leftKP, outKPImage1, new Scalar(
-					0, 255, 0, 255), 0);
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(outKPImage), "leftkp");
-			Features2d.drawKeypoints(mMatRight, rightKP, outKPImage2,
-					new Scalar(255, 0, 0, 255), 0);
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(outKPImage), "rightkp");
-			Mat combineFeatures = combineImages(outKPImage1, outKPImage2);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.colorMatToBitmap(combineFeatures),
-					"featuresCombined");
-
 			// Get keypoints of good matches
 			List<KeyPoint> kpListLeft = leftKP.toList();
 			List<KeyPoint> kpListRight = rightKP.toList();
@@ -260,14 +278,20 @@ public class DepthMapper implements Callable<Bitmap> {
 			LinkedList<Point> goodKPLeft = new LinkedList<Point>();
 			LinkedList<Point> goodKPRight = new LinkedList<Point>();
 			for (int i = 0; i < goodMatchesList.size(); i++) {
-				goodKPLeft
-						.addLast(kpListLeft.get(goodMatchesList.get(i).queryIdx).pt);
-				kpListGoodLeft
-						.add(kpListLeft.get(goodMatchesList.get(i).queryIdx));
-				goodKPRight
-						.addLast(kpListRight.get(goodMatchesList.get(i).trainIdx).pt);
-				kpListGoodRight
-						.add(kpListRight.get(goodMatchesList.get(i).trainIdx));
+				Point leftPoint = kpListLeft
+						.get(goodMatchesList.get(i).queryIdx).pt;
+				Point rightPoint = kpListRight
+						.get(goodMatchesList.get(i).trainIdx).pt;
+				if (Math.abs(leftPoint.y - rightPoint.y) < (mMatLeft.rows() / 8)) {
+					goodKPLeft
+							.addLast(kpListLeft.get(goodMatchesList.get(i).queryIdx).pt);
+					kpListGoodLeft
+							.add(kpListLeft.get(goodMatchesList.get(i).queryIdx));
+					goodKPRight
+							.addLast(kpListRight.get(goodMatchesList.get(i).trainIdx).pt);
+					kpListGoodRight
+							.add(kpListRight.get(goodMatchesList.get(i).trainIdx));
+				}
 			}
 			MatOfPoint2f leftKPf = new MatOfPoint2f();
 			MatOfPoint2f rightKPf = new MatOfPoint2f();
@@ -606,8 +630,10 @@ public class DepthMapper implements Callable<Bitmap> {
 			// Calculate disparities of original
 			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
 			// 13);
-			StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 3, 128, 256, 20,
-					16, 1, 100, 20, true);
+			// StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 3, 128, 256, 20,
+			// 		16, 1, 100, 20, true);
+			StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 11, 968, 3872, -1,
+					20, 5, 100, 20, true);
 			Mat disparityBM = new Mat(mMatLeft.rows(), mMatLeft.cols(),
 					CvType.CV_32F);
 			Mat disparityBMFinal = new Mat(mMatLeft.rows(), mMatLeft.cols(),
@@ -666,8 +692,16 @@ public class DepthMapper implements Callable<Bitmap> {
 			Mat combineDispRectShear = combineImages(combineDispRect,
 					disparityBMFinalRectShear);
 			MichelangeloCamera.saveBitmap(
+					MichelangeloCamera.grayMatToBitmap(disparityBMFinalRectShear),
+					"dispShear");
+			MichelangeloCamera.saveBitmap(
 					MichelangeloCamera.grayMatToBitmap(combineDispRectShear),
 					"dispCombined");
+
+			// Mat pointCloudMat = new Mat ( disparityBMFinalRectShear.size(),
+			// CvType.CV_32FC3);
+			// Calib3d.reprojectImageTo3D(disparityBMFinalRectShear,
+			// pointCloudMat, mQMatrix, true);
 		}
 
 		return result;
@@ -690,7 +724,7 @@ public class DepthMapper implements Callable<Bitmap> {
 		Mat epilineImage = new Mat(mMatLeft.size(), CvType.CV_8UC1);
 		img.copyTo(epilineImage);
 		List<Point> pointList = points.toList();
-		Scalar color = new Scalar(127, 127, 127, 255);
+		Scalar color = new Scalar(0, 0, 0, 255);
 		for (int i = 0; i < epilines.rows(); i++) {
 			double[] lineData = epilines.get(i, 0);
 			int x0 = 0;
