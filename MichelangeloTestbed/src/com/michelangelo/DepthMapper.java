@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -293,6 +295,39 @@ public class DepthMapper implements Callable<Bitmap> {
 							.add(kpListRight.get(goodMatchesList.get(i).trainIdx));
 				}
 			}
+			
+			/* Remove Outliers */
+			
+			LinkedList<Integer> firstOutlierIndices = removeOutliers(goodKPLeft, goodKPRight);
+			
+			Log.w(TAG, "FIRST OUTLIER REMOVAL");
+			int indices_removed = 0;
+			for(int index : firstOutlierIndices) {
+				Log.w(TAG, "REMOVING INDEX " + index);
+				int index_to_remove = index - indices_removed;
+				goodKPLeft.remove(index_to_remove);
+				goodKPRight.remove(index_to_remove);
+				kpListGoodLeft.remove(index_to_remove);
+				kpListGoodRight.remove(index_to_remove);
+				indices_removed ++;
+			}
+
+			Log.w(TAG, "REMOVED ALL INDICES");
+			
+			LinkedList<Integer> outlierIndices = NormalFilter(goodKPLeft, goodKPRight);
+			indices_removed = 0;
+			for(int index : outlierIndices) {
+				Log.w(TAG, "REMOVING INDEX " + index);
+				int index_to_remove = index - indices_removed;
+				goodKPLeft.remove(index_to_remove);
+				goodKPRight.remove(index_to_remove);
+				kpListGoodLeft.remove(index_to_remove);
+				kpListGoodRight.remove(index_to_remove);
+				indices_removed ++;
+			}
+
+			Log.w(TAG, "REMOVED ALL INDICES");
+			
 			MatOfPoint2f leftKPf = new MatOfPoint2f();
 			MatOfPoint2f rightKPf = new MatOfPoint2f();
 			leftKPf.fromList(goodKPLeft);
@@ -706,7 +741,174 @@ public class DepthMapper implements Callable<Bitmap> {
 
 		return result;
 	}
+	/*
+	 * Returns Array of LinkedList of KeyPoints on matrix. idx 0 of return matrix is
+	 * left KPs, idx 1 of return matrix is right KPs
+	 * 
+	 * The return contains indices of the outliers that need to be removed
+	 *  
+	 * ########################################################
+	 *  
+	 *       ASSUMES THAT leftKps.size() == rightKps.size()
+	 * 
+	 * ########################################################
+	 *  
+	 */
+	public LinkedList<Integer> NormalFilter(LinkedList<Point> leftKps, LinkedList<Point> rightKps) {
+		
+		float slmean = 0;
+		float slstddev = 0;
+		
+		float dstmean = 0;
+		float dststddev = 0;
+		
+		LinkedList<Integer> result = new LinkedList<Integer>();
+		
+		LinkedList<Float> slopes = new LinkedList<Float>();
+		LinkedList<Float> dists = new LinkedList<Float>();
+		Iterator<Point> iLeft = leftKps.iterator();
+		Iterator<Point> iRight = rightKps.iterator();
+		while(iLeft.hasNext()) {
+			Point left = iLeft.next();
+			Point right = iRight.next();
+			float dy = (float) (right.y - left.y);
+			float dx = (float) ((right.x + mMatLeft.cols()) - left.x);
+			float slope = dy / dx;
+			float dist  = dx * dx + dy * dy;
+			slmean += slope;
+			slopes.add(slope); // slopes will be in the same order as leftKps and rightKps
+			dstmean += dist;
+			dists.add(dist);
+		}
+		
+		slmean /= leftKps.size(); // get the mean
+		dstmean /= leftKps.size();
+		
+		/* Now calculate the stdDev */
+		
+		Iterator<Float> iSlopes = slopes.iterator();
+		Iterator<Float> iDists = dists.iterator();
+		
+		while(iSlopes.hasNext()) {
+			float val = (iSlopes.next() - slmean);
+			slstddev += (val * val);
+			float dstval = iDists.next() - dstmean;
+			dststddev += (dstval * dstval);
+		}
+		
+		slstddev = (float) Math.sqrt(slstddev /leftKps.size());		
+		dststddev = (float) Math.sqrt(dststddev / leftKps.size());
+		
+		/* Now add the outliers to the result list if they exceed stddev */
 
+		iSlopes = slopes.iterator(); // reset the iterator
+		iDists = dists.iterator();
+		
+		int i = 0;
+		int slope_outliers = 0;
+		int dist_outliers = 0;
+		
+		while(iSlopes.hasNext()) {
+			i++;
+			float slope = iSlopes.next();
+			float dist = iDists.next();
+			if(Math.abs(slope - slmean) > (2.0 * slstddev)) {
+				Log.w(TAG, "slope: " + slope + " mean: " + slmean + " stddev: " + slstddev);
+				result.add(i-1);
+				slope_outliers ++;
+				continue;
+			}
+			if(Math.abs(dist - dstmean) > (2.0 * dststddev)) {
+				Log.w(TAG, "dist: " + dist + " mean: " + dstmean + " stddev: " + dststddev);
+				result.add(i-1);
+				dist_outliers ++;
+			}
+		}
+		Log.w(TAG, "RESULT HAS " + result.size() + " elements, original had " + leftKps.size());
+		Log.w(TAG, "removed " + slope_outliers + " slope outliers and " + dist_outliers + " dist outliers");
+		return result;
+	}
+
+	public LinkedList<Integer> removeOutliers(LinkedList<Point> leftKps, LinkedList<Point> rightKps) {
+		
+		LinkedList<Integer> result = new LinkedList<Integer>();
+		
+		LinkedList<Float> slopes = new LinkedList<Float>();
+		LinkedList<Float> dists = new LinkedList<Float>();
+		Iterator<Point> iLeft = leftKps.iterator();
+		Iterator<Point> iRight = rightKps.iterator();
+		while(iLeft.hasNext()) {
+			Point left = iLeft.next();
+			Point right = iRight.next();
+			float dy = (float) (right.y - left.y);
+			float dx = (float) ((right.x + mMatLeft.cols()) - left.x);
+			float slope = dy / dx;
+			float dist  = dx * dx + dy * dy;
+			//slmean += slope;
+			slopes.add(slope); // slopes will be in the same order as leftKps and rightKps
+			//dstmean += dist;
+			dists.add(dist);
+		}
+		
+		/* Sort so our calculations are easier */
+		
+		Collections.sort(slopes);
+		Collections.sort(dists);
+		
+		/* Get the median and quartiles */
+		
+		//float slmedian = (slopes.get(slopes.size()/2) + slopes.get((slopes.size() + 1) / 2)) / 2;
+		//float dstmedian = (dists.get(dists.size()/2) + dists.get((dists.size() + 1) / 2)) / 2;
+		
+		int upperQuartRoundUp = ((slopes.size() * 3) + 1) / 4;
+		int upperQuartRoundDown = (slopes.size() * 3) / 4;
+		int lowerQuartRoundUp = (slopes.size() + 1) / 4;
+		int lowerQuartRoundDown = slopes.size() / 4;
+		
+		float slUpperQuartile = (slopes.get(upperQuartRoundUp) + slopes.get(upperQuartRoundDown)) / 2;
+		float dstUpperQuartile = (dists.get(upperQuartRoundUp) + dists.get(upperQuartRoundDown)) / 2;
+		float slLowerQuartile = (slopes.get(lowerQuartRoundUp) + slopes.get(lowerQuartRoundDown)) / 2;
+		float dstLowerQuartile = (dists.get(lowerQuartRoundUp) + dists.get(lowerQuartRoundDown)) / 2;
+				
+		/* Calculate the valid ranges */
+		
+		float slMajorQuartileRange = (slUpperQuartile - slLowerQuartile) * 3;
+		float dstMajorQuartileRange = (dstUpperQuartile - dstLowerQuartile) * 3; 
+		float slUpperMajorFence = slUpperQuartile + slMajorQuartileRange; 
+		float dstUpperMajorFence = dstUpperQuartile + dstMajorQuartileRange; 
+		float slLowerMajorFence = slLowerQuartile - slMajorQuartileRange; 
+		float dstLowerMajorFence = dstLowerQuartile - dstMajorQuartileRange;
+
+		Iterator<Float> iSlopes = slopes.iterator(); // reset the iterator
+		Iterator<Float> iDists = dists.iterator();
+		
+		/* Remove Outliers if they land outside the fences */
+		
+		int i = 0;
+		int slope_outliers = 0;
+		int dist_outliers = 0;
+		
+		while(iSlopes.hasNext()) {
+			i++;
+			float slope = iSlopes.next();
+			float dist = iDists.next();
+			if(slope < slLowerMajorFence || slope > slUpperMajorFence) {
+				Log.w(TAG, "slope: " + slope + " UppperFence: " + slUpperMajorFence + " LowerFence: " + slLowerMajorFence);
+				result.add(i-1);
+				slope_outliers ++;
+				continue;
+			}
+			if(dist < dstLowerMajorFence || dist > dstUpperMajorFence) {
+				Log.w(TAG, "dist: " + dist + " UppperFence: " + dstUpperMajorFence + " LowerFence: " + dstLowerMajorFence);
+				result.add(i-1);
+				dist_outliers ++;
+			}
+		}
+		Log.w(TAG, "RESULT HAS " + result.size() + " elements, original had " + leftKps.size());
+		Log.w(TAG, "removed " + slope_outliers + " slope outliers and " + dist_outliers + " dist outliers");
+		return result;
+	}
+	
 	public Mat combineImages(Mat leftMat, Mat rightMat) {
 		Mat combine = new Mat(leftMat.rows(), leftMat.cols() + rightMat.cols(),
 				leftMat.type());

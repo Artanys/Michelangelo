@@ -75,10 +75,23 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int sample_7=0x7f020011;
         public static final int selector=0x7f020012;
         public static final int temple1=0x7f020013;
-        public static final int temple2=0x7f020014;
+        public static final int temple10=0x7f020014;
+        public static final int temple11=0x7f020015;
+        public static final int temple12=0x7f020016;
+        public static final int temple13=0x7f020017;
+        public static final int temple14=0x7f020018;
+        public static final int temple15=0x7f020019;
+        public static final int temple2=0x7f02001a;
+        public static final int temple3=0x7f02001b;
+        public static final int temple4=0x7f02001c;
+        public static final int temple5=0x7f02001d;
+        public static final int temple6=0x7f02001e;
+        public static final int temple7=0x7f02001f;
+        public static final int temple8=0x7f020020;
+        public static final int temple9=0x7f020021;
         /**  drawable 
          */
-        public static final int translucent_background=0x7f020015;
+        public static final int translucent_background=0x7f020022;
     }
     public static final class id {
         public static final int TextView02=0x7f0b001f;

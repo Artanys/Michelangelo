@@ -401,41 +401,40 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Parameters params = mCamera.getParameters();
 			float focalLength = params.getFocalLength();
 
-			for (int i = 0; i < 15; i++) {
-				Bitmap bmpSample1 = BitmapFactory
-						.decodeResource(getResources(),
-								templeArray[(mDMList.size() + 14) % 15]);
-				Bitmap bmpSample2 = BitmapFactory.decodeResource(
-						getResources(), templeArray[mDMList.size() % 15]);
-				Mat matSample1 = bitmapToMat(bmpSample1);
-				Mat matSample2 = bitmapToMat(bmpSample2);
-				Mat graySample1 = colorMatToGrayscale(matSample1);
-				Mat graySample2 = colorMatToGrayscale(matSample2);
+			// for (int i = 0; i < 15; i++) {
+			Bitmap bmpSample1 = BitmapFactory.decodeResource(getResources(),
+					templeArray[(mDMList.size() + 14) % 15]);
+			Bitmap bmpSample2 = BitmapFactory.decodeResource(getResources(),
+					templeArray[mDMList.size() % 15]);
+			Mat matSample1 = bitmapToMat(bmpSample1);
+			Mat matSample2 = bitmapToMat(bmpSample2);
+			Mat graySample1 = colorMatToGrayscale(matSample1);
+			Mat graySample2 = colorMatToGrayscale(matSample2);
 
-				DepthMapper dm = new DepthMapper((int) (focalLength * 10),
-						bmHeight, graySample1);
-				// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth,
-				// bmHeight));
-				dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
-				dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
-				mDMList.add(dm);
-				if (mDMList.size() > 0) {
-					mDMList.get(mDMList.size() - 1).setRightData(bmWidth,
-							bmHeight, graySample2);
-					mTaskList
-							.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
-				}
-
-				try {
-					mTaskList.get(mTaskList.size() - 1).get();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			DepthMapper dm = new DepthMapper((int) (focalLength * 10),
+					bmHeight, grayMat);
+			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth,
+			// bmHeight));
+			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
+			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
+			if (mDMList.size() > 0) {
+				mDMList.get(mDMList.size() - 1).setRightData(bmWidth, bmHeight,
+						grayMat);
+				mTaskList
+						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
+			mDMList.add(dm);
+
+			// try {
+			// mTaskList.get(mTaskList.size() - 1).get();
+			// } catch (InterruptedException e) {
+			// // TODO Auto-generated catch block
+			// e.printStackTrace();
+			// } catch (ExecutionException e) {
+			// // TODO Auto-generated catch block
+			// e.printStackTrace();
+			// }
+			// }
 		}
 	};
 
@@ -586,8 +585,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				}
 			}
 
-			params.setPictureSize(minSize.width, minSize.height);
-			// params.setPictureSize(medSize.width, medSize.height);
+			// params.setPictureSize(minSize.width, minSize.height);
+			params.setPictureSize(medSize.width, medSize.height);
 			// params.setPictureSize(maxSizeIndex.width, maxSizeIndex.height);
 			// params.setPreviewSize(params.getPictureSize().width,
 			// params.getPictureSize().height);
