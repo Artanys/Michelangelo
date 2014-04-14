@@ -62,7 +62,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private static final String TAG = "MichelangeloCamera";
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
-	public static int NUM_IMAGES = 8;
+	public static int NUM_IMAGES = 16;
 	
 	public static final long pulse_duration = 100;
 	public static final long pulse_off_duration = 600;
@@ -128,7 +128,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						TextView yawText = (TextView) findViewById(R.id.yaw_text);
 						TextView pitchText = (TextView) findViewById(R.id.pitch_text);
 						TextView rollText = (TextView) findViewById(R.id.roll_text);
-						yawText.setText((int)mSensor.Deg_orientation[0] + "° " + cameraTimeCount);
+						yawText.setText((int)mSensor.Deg_orientation[0] + "°");
 						pitchText.setText((int)mSensor.Deg_orientation[1] + "°");
 						rollText.setText((int)mSensor.Deg_orientation[2] + "°"); 
 						float yaw = mSensor.Rad_orientation[0];
@@ -213,14 +213,20 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	
 	public void takePicture() {
 		// get an image from the camera
+		mSensor.CaptureNumber += 1;
 		mCamera.autoFocus(null);
 		mCamera.takePicture(null, null, mPicture);
-		mSensor.CaptureNumber += 1;
 		if(mSensor.CaptureNumber == 1){
 			mSensor.InitialYaw = mSensor.Rad_orientation[0];
 			mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
+		}
+		if((mSensor.CaptureNumber % 2) == 1){
 			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 			lastImage.setVisibility(View.VISIBLE);
+			//Add direction arrow here
+		} else {
+			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+			lastImage.setVisibility(View.GONE);
 		}
 		if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
 			Context context = getApplicationContext();
@@ -233,8 +239,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mSensor.CaptureNumber = 0;
 			mSensor.InitialYaw = 0;
 			mSensor.NumberOfCaptures = 1;
-			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
-			lastImage.setVisibility(View.GONE);
+//			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+//			lastImage.setVisibility(View.GONE);
 		}
 	}
 
@@ -344,6 +350,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		public void onPictureTaken(byte[] data, Camera camera) {
 			Log.d(TAG, "Taking Picture");
 			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+			RectangleView guideBox = (RectangleView) findViewById(R.id.guideBox);
 			FrameLayout lastImageBox = (FrameLayout) findViewById(R.id.last_image_window);
 			FrameLayout imageBox = (FrameLayout) findViewById(R.id.camera_window);
 			LinearLayout overlayBox = (LinearLayout) findViewById(R.id.overlay);
@@ -373,7 +380,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mat.postRotate(90);
 			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
 			Bitmap bitmapResized = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
-			bitmapLast = Bitmap.createBitmap(bitmapResized, lastImageBox.getLeft() + overlayBox.getLeft(), lastImageBox.getTop() 
+			bitmapLast = Bitmap.createBitmap(bitmapResized, guideBox.getLeft() + overlayBox.getLeft(), guideBox.getTop() + lastImageBox.getTop() 
 					+ overlayBox.getTop(), lastImage.getWidth(), lastImage.getHeight());
 			lastImage.setImageBitmap(bitmapLast);
 			
@@ -707,7 +714,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = sharedPref.edit();
 		editor.putInt(getString(R.string.saved_setting_num_images), numImages);
-		NUM_IMAGES = numImages;
+		NUM_IMAGES = 2 * numImages;
 		editor.commit();
 	}
 

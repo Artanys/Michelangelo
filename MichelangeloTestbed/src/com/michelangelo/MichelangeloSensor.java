@@ -95,7 +95,10 @@ public class MichelangeloSensor implements SensorEventListener {
             
             SensorManager.getOrientation(mRotationMatrix, Rad_orientation);
             
-            YAWTARGET = InitialYaw*DEG + ((float) CaptureNumber / NumberOfCaptures ) * 360;
+            int PositionNumber = CaptureNumber / 2; 
+            int NumberOfPositions = NumberOfCaptures / 2 + NumberOfCaptures % 2;
+            
+            YAWTARGET = InitialYaw*DEG + ((float) PositionNumber / NumberOfPositions ) * 360;
             
             if(YAWTARGET >= 180){
             	internal_Deg_Orientation[0] -= 360;

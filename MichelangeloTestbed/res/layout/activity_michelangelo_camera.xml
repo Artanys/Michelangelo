@@ -160,19 +160,23 @@
 	    <FrameLayout
 	        android:id="@+id/last_image_window"
 	        android:layout_width="match_parent"
-	        android:layout_height="0dp"
-	        android:layout_margin="20dp"
+            android:layout_height="0dp"
 	        android:layout_weight="5">
 	    
 		    <com.michelangelo.RectangleView
 		        android:id="@+id/guideBox"
 		        android:layout_width="match_parent"
-		        android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_margin="20dp" />
 		    
 		    <ImageView
 			    android:id="@+id/last_image"
 			    android:layout_width="match_parent"
 			    android:layout_height="match_parent"
+			    android:layout_marginTop="20dp"
+			    android:layout_marginBottom="20dp"
+			    android:layout_marginLeft="0dp"
+			    android:layout_marginRight="40dp"
 			    android:alpha=".45"/>
 		    
 	    </FrameLayout>
