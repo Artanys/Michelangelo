@@ -28,6 +28,7 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -45,10 +46,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -172,7 +175,12 @@ public class MichelangeloCamera extends MichelangeloUI implements
 							cameraTimeCount = 0;
 						}
 						
-						if( cameraTimeCount == 12 ){
+						if( cameraTimeCount == 12 && (mSensor.CaptureNumber % 2) == 0 ){
+							cameraTimeCount = 0;
+							takePicture();
+						}
+						
+						if( cameraTimeCount == 28 && (mSensor.CaptureNumber % 2) == 1 ){
 							cameraTimeCount = 0;
 							takePicture();
 						}
@@ -384,6 +392,13 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					+ overlayBox.getTop(), lastImage.getWidth(), lastImage.getHeight());
 			lastImage.setImageBitmap(bitmapLast);
 			
+			if((mSensor.CaptureNumber % 2) == 0){
+				guideBox.setX(getPixels(100));			
+			} else {
+				
+				guideBox.setX(getPixels(0));
+			}
+			
 			int bmWidth = bitmapRot.getWidth();
 			int bmHeight = bitmapRot.getHeight();
 			Mat ImageMat = bitmapToMat(bitmapRot);
@@ -412,19 +427,25 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mDMList = new ArrayList<DepthMapper>();
 			if (mTaskList == null)
 				mTaskList = new ArrayList<Future<Bitmap>>();
-			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight, grayMat);
-			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
-			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
-			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
-			if (mDMList.size() > 0) {
-				mDMList.get(mDMList.size() - 1).setRightData(y2D, bmWidth,
-						bmHeight, grayMat);
-				mTaskList
-						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
-			}
-			mDMList.add(dm);
+//			DepthMapper dm = new DepthMapper(y2D, bmWidth, bmHeight, grayMat);
+//			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth, bmHeight));
+//			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
+//			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
+//			if (mDMList.size() > 0) {
+//				mDMList.get(mDMList.size() - 1).setRightData(y2D, bmWidth,
+//						bmHeight, grayMat);
+//				mTaskList
+//						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
+//			}
+//			mDMList.add(dm);
 		}			
 	};
+	
+	private int getPixels(int dipValue){ 
+	     Resources r = getResources();
+	     int px = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue,   r.getDisplayMetrics());
+	     return px; 
+	}
 
 	/** Create a File for saving an image or video */
 	private static File getOutputMediaFile(int type) {

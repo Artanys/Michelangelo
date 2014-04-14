@@ -75,7 +75,7 @@ public class CaptureSettingsFragment extends DialogFragment {
         
         // Update the seekbar with the last value
 
-    	int prevValue = MichelangeloCamera.NUM_IMAGES;
+    	int prevValue = MichelangeloCamera.NUM_IMAGES / 2;
         seekBar.setProgress(prevValue - 6);
     	((TextView) view.findViewById(R.id.textView2)).setText(Integer.toString(prevValue));
 

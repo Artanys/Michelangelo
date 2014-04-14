@@ -5,7 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import java.lang.Math;;
+import java.lang.Math;
 
 public class MichelangeloSensor implements SensorEventListener {
 	private SensorManager mSensorManager;
