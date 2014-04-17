@@ -83,21 +83,25 @@ public class DepthMapper implements Callable<Bitmap> {
 	private int mImgWidth = 0;
 	private int mImgHeight = 0;
 	public Mat pointMid; 
+	public Mat colorMat;
 	private int mWindowWidth = 0;
 	private int mWindowHeight = 0;
 	private static boolean first = true;
 
 	private FILTER_MODE mFilterMode = FILTER_MODE.NONE;
 
-	public DepthMapper(int width, int height, Mat matLeft) {
+	public DepthMapper(int width, int height, Mat matLeft, Mat colorMat) {
 		mMatLeft = matLeft;
 		mImgWidth = width;
 		mImgHeight = height;
+		this.colorMat = colorMat;
+		
 		pointMid = new Mat(2,1,CvType.CV_32F);
 		Point mid = new Point(matLeft.cols()/2,matLeft.rows()/2);
 		List<Point> temp = new ArrayList<Point>(1);
 		temp.add(mid);
 		(Converters.vector_Point_to_Mat(temp)).convertTo(pointMid, CvType.CV_32F);
+		
 		mFocalLength = width;
 		PIXEL_PRODUCTS = new int[256][256];
 		for (int i = 0; i < 256; i++) {
@@ -187,20 +191,27 @@ public class DepthMapper implements Callable<Bitmap> {
 		Bitmap result = null;
 
 		if (generateDepthMap()) {
-			
 			if(first){
 				first = false;
 				Server.initClient();
 			}
-			Server.sendFrame(mMatLeft, 0, -477, -640, 500, .06666666666, 4);
+			Server.sendFrame(mMatLeft, 1, -477, -640, 500, .06666666666, 4);
+			Server.sendColor(colorMat);
 			
+			Mat temp = Mat.zeros(3,4,CvType.CV_32FC2);
+			float[] f00 = new float[2];
+			float[] f23 = new float[2];
+			float[] f11 = new float[2];
 			
-			Mat temp = new Mat(3,4,CvType.CV_8U);
+			f00[0] = 3;
+			f00[1] = (float) 1.7;
+			f23[0] = 5;
+			f11[0] = (float)(1.4);
 			
-			temp.put(0, 0, 3.0);
-			temp.put(2,3, 9.0);
-			temp.put(1, 1, .2);
-			Server.sendMat(pointMid);
+			temp.put(0, 0, f00);
+			temp.put(2,3, f23);
+			temp.put(1, 1, f11);
+			//Server.send(temp);
 			
 			// Detect features
 			// Imgproc.equalizeHist(mMatLeft, mMatLeft);
@@ -753,6 +764,8 @@ public class DepthMapper implements Callable<Bitmap> {
 			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
 			disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
 					255.0 / (96 * 16.));
+			
+			Server.sendGray(disparityBMFinal);
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinal);
 			Log.w(TAG, "Disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
@@ -769,7 +782,6 @@ public class DepthMapper implements Callable<Bitmap> {
 			disparityBM.convertTo(disparityBMFinalRect,
 					disparityBMFinalRect.type(), 255.0 / (96 * 16.));
 			
-			//Server.sendMat(disparityBMFinalRect);
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinalRect);
 			Log.w(TAG, "Rectified disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
@@ -785,6 +797,9 @@ public class DepthMapper implements Callable<Bitmap> {
 			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
 			disparityBM.convertTo(disparityBMFinalRectShear,
 					disparityBMFinalRectShear.type(), 255.0 / (96 * 16.));
+			
+			//Server.send(disparityBMFinalRect);
+			
 			result = MichelangeloCamera
 					.grayMatToBitmap(disparityBMFinalRectShear);
 			Log.w(TAG,

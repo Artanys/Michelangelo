@@ -80,6 +80,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
 	int cameraTimeCount;
+	private static boolean first = true;
 
 	// public Vibrator vibe;
 
@@ -468,8 +469,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Mat graySample1 = colorMatToGrayscale(matSample1);
 			Mat graySample2 = colorMatToGrayscale(matSample2);
 
+
 			DepthMapper dm = new DepthMapper((int) (focalLength * 10),
-					bmHeight, grayMat);
+					bmHeight, grayMat, ImageMat);
+			
 			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth,
 			// bmHeight));
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);

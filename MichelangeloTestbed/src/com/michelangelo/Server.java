@@ -34,27 +34,45 @@ public class Server {
 	
 	public synchronized static void sendFrame (Mat left, int numImages, double Q03, double Q13, double Q23, double Q32, double Q33){
 		Log.i("Server","Sending data to server");
-		Server.sendInt(left.rows());
-		Server.sendInt(left.cols());
-		Server.sendInt(numImages);
-		Server.sendDouble(Q03);
-		Server.sendDouble(Q13);
-		Server.sendDouble(Q23);
-		Server.sendDouble(Q32);
-		Server.sendDouble(Q33);
+		Server.send(left.rows()/4);
+		Server.send(left.cols()/4);
+		Server.send(numImages);
+		Server.send(Q03);
+		Server.send(Q13);
+		Server.send(Q23);
+		Server.send(Q32);
+		Server.send(Q33);
 		flush();
 		Log.i("Server","Data sent to server");
 	}
 	
-	public synchronized static void sendMat (Mat output){
-		Server.sendInt(output.type());
-		for(int r=0 ; r<output.rows(); r++){
-			for (int c=0; c<output.cols(); c++){
-				double[] element = output.get(r,c);
-				for (int dep = 0; dep<output.channels(); dep++){
-					Server.sendDouble(element[dep]);
-					Log.i(TAG,Double.toString(element[dep]));
-				}
+	
+	public synchronized static void sendColor (Mat output){
+		Server.send(output.type());
+		for(int r=0 ; r<output.rows(); r+=4){
+			for (int c=0; c<output.cols(); c+=4){
+				byte[] element = new byte[output.channels()]; 
+				output.get(r,c,element);
+					Server.send(element[2]);
+					Server.send(element[1]);
+					Server.send(element[0]);
+					Server.send(element[3]);
+					//Log.i(TAG,Double.toString(element[dep]));
+			}
+		}
+		flush();
+	}
+	
+	public synchronized static void sendGray (Mat output){
+		Server.send(output.type());
+		for(int r=0 ; r<output.rows(); r+=4){
+			for (int c=0; c<output.cols(); c+=4){
+				byte[] element = new byte[output.channels()]; 
+				output.get(r,c,element);
+				
+					Server.send(element[0]);
+					//Log.i(TAG,Double.toString(element[dep]));
+				
 			}
 		}
 		flush();
@@ -68,7 +86,7 @@ public class Server {
 			e.printStackTrace();
 		}
 	}
-	public static void sendString(String message){
+	public static void send(String message){
 		try {
 			ostream.writeChars(message);
 		} catch (IOException e) {
@@ -78,7 +96,7 @@ public class Server {
 		
 	}
 	
-	public static void sendInt(int message){
+	public static void send(int message){
 		try {
 			ostream.writeInt(message);
 		} catch (IOException e) {
@@ -88,16 +106,34 @@ public class Server {
 		
 	}
 	
-	public static void sendDouble(double message){
+	public static void send(byte message){
+		try {
+			ostream.writeByte(message);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void send(double message){
 		try {
 			ostream.writeDouble(message);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		
 	}
+	
+		public static void send(float message){
+			try {
+				ostream.writeFloat(message);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		}
 
 	
 	}
