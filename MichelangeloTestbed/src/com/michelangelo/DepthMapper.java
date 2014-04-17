@@ -7,6 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,8 +40,10 @@ import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.Features2d;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.utils.Converters;
 
 import android.graphics.Bitmap;
+import android.os.StrictMode;
 import android.util.Log;
 
 public class DepthMapper implements Callable<Bitmap> {
@@ -77,14 +82,22 @@ public class DepthMapper implements Callable<Bitmap> {
 	private int mFocalLength = 0;
 	private int mImgWidth = 0;
 	private int mImgHeight = 0;
+	public Mat pointMid; 
 	private int mWindowWidth = 0;
 	private int mWindowHeight = 0;
+	private static boolean first = true;
+
 	private FILTER_MODE mFilterMode = FILTER_MODE.NONE;
 
 	public DepthMapper(int width, int height, Mat matLeft) {
 		mMatLeft = matLeft;
 		mImgWidth = width;
 		mImgHeight = height;
+		pointMid = new Mat(2,1,CvType.CV_32F);
+		Point mid = new Point(matLeft.cols()/2,matLeft.rows()/2);
+		List<Point> temp = new ArrayList<Point>(1);
+		temp.add(mid);
+		(Converters.vector_Point_to_Mat(temp)).convertTo(pointMid, CvType.CV_32F);
 		mFocalLength = width;
 		PIXEL_PRODUCTS = new int[256][256];
 		for (int i = 0; i < 256; i++) {
@@ -92,7 +105,11 @@ public class DepthMapper implements Callable<Bitmap> {
 				PIXEL_PRODUCTS[i][j] = i * j;
 			}
 		}
+		
+		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		StrictMode.setThreadPolicy(policy);
 		initMatrices();
+		
 
 		filters.put(FILTER_MODE.MEDIAN, new FilterFunc() {
 			public int filter(Window window) {
@@ -130,7 +147,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			}
 		});
 	}
-
+	
 	private void initMatrices() {
 		// float[] camMatVals = { 5.25221191e+002f, 0.f, 2.45101059e+002f, 0.f,
 		// 5.25221191e+002f, 3.21628296e+002f, 0.f, 0.f, 1.f };
@@ -144,11 +161,47 @@ public class DepthMapper implements Callable<Bitmap> {
 		mDistCoeffs.put(0, 0, distMatVals);
 		mQMatrix.put(0, 0, qMatVals);
 	}
+	
 
+	private Mat transformMidpoint(Mat midPoint, Mat transform){
+		
+		Mat dst = new Mat(2,1,CvType.CV_32F);
+		String output = "";
+		Mat m = new Mat();
+		transform.convertTo(m, CvType.CV_32F);
+		
+		Core.perspectiveTransform(midPoint, dst, m);
+		
+		
+		//Log points
+		for(int i=0; i<midPoint.cols(); i++){
+			output+=Arrays.toString(midPoint.get(0, i));
+			output+=Arrays.toString(dst.get(0, i));
+		}
+		Log.i("DepthMapper", output);
+		
+		return dst;
+	}
+	
 	public Bitmap call() {
 		Bitmap result = null;
 
 		if (generateDepthMap()) {
+			
+			if(first){
+				first = false;
+				Server.initClient();
+			}
+			Server.sendFrame(mMatLeft, 0, -477, -640, 500, .06666666666, 4);
+			
+			
+			Mat temp = new Mat(3,4,CvType.CV_8U);
+			
+			temp.put(0, 0, 3.0);
+			temp.put(2,3, 9.0);
+			temp.put(1, 1, .2);
+			Server.sendMat(pointMid);
+			
 			// Detect features
 			// Imgproc.equalizeHist(mMatLeft, mMatLeft);
 			// Imgproc.equalizeHist(mMatRight, mMatRight);
@@ -365,7 +418,10 @@ public class DepthMapper implements Callable<Bitmap> {
 					Calib3d.RANSAC, 3, 0.99);
 			Mat fundMat2 = Calib3d.findFundamentalMat(leftKPf, rightKPf,
 					Calib3d.RANSAC, 3, 0.99);
-
+			
+			Mat midFund = transformMidpoint(pointMid, fundMat2);
+			
+			
 			// Compute epilines
 			Mat linesLeftU = new Mat();
 			Mat linesRightU = new Mat();
@@ -481,16 +537,28 @@ public class DepthMapper implements Callable<Bitmap> {
 					MichelangeloCamera.grayMatToBitmap(combine2),
 					"rectCombined");
 
+			
+			
 			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
 					mMatLeft.size());
 			Imgproc.warpPerspective(mMatRight, rectifiedRightImage, H2,
 					mMatRight.size());
+			
+			//Calculate Warped Midpoint
+			/*Mat pT = Imgproc.getPerspectiveTransform(mMatLeft, rectifiedLeftImage);
+			Mat mid = new Mat(3,1,5,new Scalar(midPoint));
+			Core.multiply(pT, mid, mid);*/
+			
 
+
+			
+			
 			Imgproc.warpPerspective(epilineLeft, rectifiedEpilineLeftImage, H1,
 					mMatLeft.size());
 			Imgproc.warpPerspective(epilineRight, rectifiedEpilineRightImage,
 					H2, mMatRight.size());
 
+			
 			combine2 = combineImages(rectifiedEpilineLeftImage,
 					rectifiedEpilineRightImage);
 			MichelangeloCamera.saveBitmap(
@@ -700,6 +768,8 @@ public class DepthMapper implements Callable<Bitmap> {
 			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
 			disparityBM.convertTo(disparityBMFinalRect,
 					disparityBMFinalRect.type(), 255.0 / (96 * 16.));
+			
+			//Server.sendMat(disparityBMFinalRect);
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinalRect);
 			Log.w(TAG, "Rectified disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
@@ -738,9 +808,16 @@ public class DepthMapper implements Callable<Bitmap> {
 			// Calib3d.reprojectImageTo3D(disparityBMFinalRectShear,
 			// pointCloudMat, mQMatrix, true);
 		}
-
+		
+	
+		
+		
 		return result;
+		
 	}
+	
+	
+	
 	/*
 	 * Returns Array of LinkedList of KeyPoints on matrix. idx 0 of return matrix is
 	 * left KPs, idx 1 of return matrix is right KPs

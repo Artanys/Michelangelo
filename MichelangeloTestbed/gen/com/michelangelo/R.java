@@ -74,11 +74,6 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int sample_6=0x7f020010;
         public static final int sample_7=0x7f020011;
         public static final int selector=0x7f020012;
-<<<<<<< HEAD
-        /**  drawable 
-         */
-        public static final int translucent_background=0x7f020013;
-=======
         public static final int temple1=0x7f020013;
         public static final int temple10=0x7f020014;
         public static final int temple11=0x7f020015;
@@ -97,7 +92,6 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         /**  drawable 
          */
         public static final int translucent_background=0x7f020022;
->>>>>>> origin/Depth-Mapper
     }
     public static final class id {
         public static final int TextView02=0x7f0b001f;

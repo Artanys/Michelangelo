@@ -59,9 +59,9 @@ public class Log {
 		}
 	}
 
-	public static final void i(String message, Throwable t) {
+	public static final void i(String message, Throwable string) {
 		if (isDebug) {
-			android.util.Log.i(TAG, message, t);
+			android.util.Log.i(TAG, message, string);
 		}
 	}
 	
