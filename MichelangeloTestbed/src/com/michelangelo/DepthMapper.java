@@ -195,7 +195,7 @@ public class DepthMapper implements Callable<Bitmap> {
 				first = false;
 				Server.initClient();
 			}
-			Server.sendFrame(mMatLeft, 1, -477, -640, 500, .06666666666, 4);
+			Server.sendFrame(mMatLeft, 1, -477, -640, 112, -.06666666666, 4);
 			Server.sendColor(colorMat);
 			
 			Mat temp = Mat.zeros(3,4,CvType.CV_32FC2);

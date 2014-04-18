@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import android.util.Log;
@@ -16,7 +17,7 @@ public class Server {
 	private static final String TAG = "Server";
 	private static Socket client;
 	private static DataOutputStream ostream;
-
+	private static int scale = 4;
 
 	public synchronized static void initClient() {
 		try {
@@ -34,8 +35,8 @@ public class Server {
 	
 	public synchronized static void sendFrame (Mat left, int numImages, double Q03, double Q13, double Q23, double Q32, double Q33){
 		Log.i("Server","Sending data to server");
-		Server.send(left.rows()/4);
-		Server.send(left.cols()/4);
+		Server.send(left.rows()/scale);
+		Server.send(left.cols()/scale);
 		Server.send(numImages);
 		Server.send(Q03);
 		Server.send(Q13);
@@ -48,9 +49,9 @@ public class Server {
 	
 	
 	public synchronized static void sendColor (Mat output){
-		Server.send(output.type());
-		for(int r=0 ; r<output.rows(); r+=4){
-			for (int c=0; c<output.cols(); c+=4){
+		Server.send(CvType.CV_8UC4);
+		for(int r=0 ; r<output.rows(); r+=scale){
+			for (int c=0; c<output.cols(); c+=scale){
 				byte[] element = new byte[output.channels()]; 
 				output.get(r,c,element);
 					Server.send(element[2]);
@@ -65,8 +66,8 @@ public class Server {
 	
 	public synchronized static void sendGray (Mat output){
 		Server.send(output.type());
-		for(int r=0 ; r<output.rows(); r+=4){
-			for (int c=0; c<output.cols(); c+=4){
+		for(int r=0 ; r<output.rows(); r+=scale){
+			for (int c=0; c<output.cols(); c+=scale){
 				byte[] element = new byte[output.channels()]; 
 				output.get(r,c,element);
 				
