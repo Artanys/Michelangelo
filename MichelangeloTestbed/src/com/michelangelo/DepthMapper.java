@@ -42,6 +42,7 @@ import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.StrictMode;
 import android.util.Log;
@@ -173,6 +174,14 @@ public class DepthMapper implements Callable<Bitmap> {
 	}
 	
 
+	/*private void promptIntents(){
+		Intent intent = new Intent();
+		intent.setAction(android.content.Intent.ACTION_VIEW);
+		File file = new File("/sdcard/test.mp4");
+		intent.setDataAndType(Uri.fromFile(file), "video/*");
+		startActivity(intent); 
+	}*/
+	
 	private Mat transformMidpoint(Mat midPoint, Mat transform){
 		
 		Mat dst = new Mat(1,1,CvType.CV_32FC2);
@@ -566,14 +575,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			Mat midFundLeft = transformMidpoint(pointMid, H1);
 			Mat midFundRight = transformMidpoint(pointMid, H2);
 			
-			float [] newMidPointLeft = new float[2];
-			midFundLeft.get(0, 0, newMidPointLeft);
-			float [] newMidPointRight = new float[2];
-			midFundRight.get(0, 0, newMidPointRight);
-			
-			double Q33 = ( newMidPointLeft[0] - newMidPointRight[0] ) * .06666666666;
-			
-			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);
+		
 
 			
 			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
@@ -582,7 +584,6 @@ public class DepthMapper implements Callable<Bitmap> {
 					mMatRight.size());
 			
 
-			Server.sendColor(colorRect);
 			
 			//Calculate Warped Midpoint
 			/*Mat pT = Imgproc.getPerspectiveTransform(mMatLeft, rectifiedLeftImage);
@@ -756,17 +757,34 @@ public class DepthMapper implements Callable<Bitmap> {
 			H2s.put(0, 0, h2sArray);
 
 
-			//Mat colorRectShear = new Mat(mapMat1.size(), colorRect.type());
+			Mat colorRectShear = new Mat(mapMat1.size(), colorRect.type());
 
-			/*Imgproc.warpPerspective(colorRect,
-					colorRectShear, H1s, colorRect.size());*/
+			Imgproc.warpPerspective(colorRect,
+					colorRectShear, H1s, colorRect.size());
 			
 			
 			Imgproc.warpPerspective(rectifiedLeftImage,
 					rectifiedShearLeftImage, H1s, mMatLeft.size());
 			Imgproc.warpPerspective(rectifiedRightImage,
 					rectifiedShearRightImage, H2s, mMatRight.size());
+			
+			
+			Mat midShear = transformMidpoint(midFundLeft,H1s);
+			
+			float [] newMidPointLeft = new float[2];
+			midShear.get(0, 0, newMidPointLeft);
+			/*float [] newMidPointRight = new float[2];
+			midFundRight.get(0, 0, newMidPointRight);
+			
+			double Q33 = ( newMidPointLeft[0] - newMidPointRight[0] ) * .06666666666;*/
+			
+			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);
+			
+			
+			Server.sendColor(colorRectShear);
 
+
+			
 			Imgproc.warpPerspective(rectifiedEpilineLeftImage,
 					rectifiedShearEpilineLeftImage, H1s, mMatLeft.size());
 			Imgproc.warpPerspective(rectifiedEpilineRightImage,
