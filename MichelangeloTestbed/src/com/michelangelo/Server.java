@@ -38,8 +38,8 @@ public class Server {
 		Server.send(left.rows()/scale);
 		Server.send(left.cols()/scale);
 		Server.send(numImages);
-		Server.send(Q03);
-		Server.send(Q13);
+		Server.send(Q03/scale);
+		Server.send(Q13/scale);
 		Server.send(Q23);
 		Server.send(Q32);
 		Server.send(Q33);

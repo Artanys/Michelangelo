@@ -205,7 +205,6 @@ public class DepthMapper implements Callable<Bitmap> {
 				first = false;
 				Server.initClient();
 			}
-			Server.sendFrame(mMatLeft, 1, -477, -640, 112, -.06666666666, 4);
 			//Server.sendColor(colorMat);
 			
 			Mat temp = Mat.zeros(3,4,CvType.CV_32FC2);
@@ -564,7 +563,18 @@ public class DepthMapper implements Callable<Bitmap> {
 			Imgproc.warpPerspective(colorMat, colorRect, H1,
 					colorMat.size());
 			
-			Mat midFund = transformMidpoint(pointMid, H1);
+			Mat midFundLeft = transformMidpoint(pointMid, H1);
+			Mat midFundRight = transformMidpoint(pointMid, H2);
+			
+			float [] newMidPointLeft = new float[2];
+			midFundLeft.get(0, 0, newMidPointLeft);
+			float [] newMidPointRight = new float[2];
+			midFundRight.get(0, 0, newMidPointRight);
+			
+			double Q33 = ( newMidPointLeft[0] - newMidPointRight[0] ) * .06666666666;
+			
+			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);
+
 			
 			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
 					mMatLeft.size());
@@ -822,7 +832,7 @@ public class DepthMapper implements Callable<Bitmap> {
 
 			// Calculate disparities of rectified and sheared
 			sgBlockMatcher.compute(rectifiedShearLeftImage,
-					rectifiedShearRightImage, disparityBM);
+					rectifiedRightImage, disparityBM);
 			minMax = Core.minMaxLoc(disparityBM);
 			minVal = minMax.minVal;
 			maxVal = minMax.maxVal;
