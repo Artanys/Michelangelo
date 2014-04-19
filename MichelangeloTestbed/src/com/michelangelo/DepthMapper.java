@@ -96,11 +96,17 @@ public class DepthMapper implements Callable<Bitmap> {
 		mImgHeight = height;
 		this.colorMat = colorMat;
 		
-		pointMid = new Mat(2,1,CvType.CV_32F);
-		Point mid = new Point(matLeft.cols()/2,matLeft.rows()/2);
-		List<Point> temp = new ArrayList<Point>(1);
-		temp.add(mid);
-		(Converters.vector_Point_to_Mat(temp)).convertTo(pointMid, CvType.CV_32F);
+		pointMid = new Mat(1,1,CvType.CV_32FC2);
+		
+		float xy[] = {matLeft.cols()/2, matLeft.rows()/2};
+		
+		pointMid.put(0, 0, xy);
+		//Point mid = new Point(matLeft.cols()/2,matLeft.rows()/2);
+		
+		
+//		List<Point> temp = new ArrayList<Point>(1);
+//		temp.add(mid);
+//		(Converters.vector_Point_to_Mat(temp)).convertTo(pointMid, CvType.CV_32F);
 		
 		mFocalLength = width;
 		PIXEL_PRODUCTS = new int[256][256];
@@ -169,7 +175,7 @@ public class DepthMapper implements Callable<Bitmap> {
 
 	private Mat transformMidpoint(Mat midPoint, Mat transform){
 		
-		Mat dst = new Mat(2,1,CvType.CV_32F);
+		Mat dst = new Mat(1,1,CvType.CV_32FC2);
 		String output = "";
 		Mat m = new Mat();
 		transform.convertTo(m, CvType.CV_32F);
@@ -178,10 +184,14 @@ public class DepthMapper implements Callable<Bitmap> {
 		
 		
 		//Log points
-		for(int i=0; i<midPoint.cols(); i++){
+		/*for(int i=0; i<midPoint.cols(); i++){
 			output+=Arrays.toString(midPoint.get(0, i));
 			output+=Arrays.toString(dst.get(0, i));
-		}
+		}*/
+		
+		output += Arrays.toString(midPoint.get(0,0));
+		output += Arrays.toString(dst.get(0, 0));
+				
 		Log.i("DepthMapper", output);
 		
 		return dst;
@@ -196,7 +206,7 @@ public class DepthMapper implements Callable<Bitmap> {
 				Server.initClient();
 			}
 			Server.sendFrame(mMatLeft, 1, -477, -640, 112, -.06666666666, 4);
-			Server.sendColor(colorMat);
+			//Server.sendColor(colorMat);
 			
 			Mat temp = Mat.zeros(3,4,CvType.CV_32FC2);
 			float[] f00 = new float[2];
@@ -430,7 +440,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			Mat fundMat2 = Calib3d.findFundamentalMat(leftKPf, rightKPf,
 					Calib3d.RANSAC, 3, 0.99);
 			
-			Mat midFund = transformMidpoint(pointMid, fundMat2);
+			//Mat midFund = transformMidpoint(pointMid, fundMat2);
 			
 			
 			// Compute epilines
@@ -548,12 +558,21 @@ public class DepthMapper implements Callable<Bitmap> {
 					MichelangeloCamera.grayMatToBitmap(combine2),
 					"rectCombined");
 
+
+			Mat colorRect = new Mat(mapMat1.size(), colorMat.type());
 			
+			Imgproc.warpPerspective(colorMat, colorRect, H1,
+					colorMat.size());
+			
+			Mat midFund = transformMidpoint(pointMid, H1);
 			
 			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
 					mMatLeft.size());
 			Imgproc.warpPerspective(mMatRight, rectifiedRightImage, H2,
 					mMatRight.size());
+			
+
+			Server.sendColor(colorRect);
 			
 			//Calculate Warped Midpoint
 			/*Mat pT = Imgproc.getPerspectiveTransform(mMatLeft, rectifiedLeftImage);
@@ -726,6 +745,13 @@ public class DepthMapper implements Callable<Bitmap> {
 			double h2sArray[] = { k3, k4, 0, 0, 1, 0, 0, 0, 1 };
 			H2s.put(0, 0, h2sArray);
 
+
+			//Mat colorRectShear = new Mat(mapMat1.size(), colorRect.type());
+
+			/*Imgproc.warpPerspective(colorRect,
+					colorRectShear, H1s, colorRect.size());*/
+			
+			
 			Imgproc.warpPerspective(rectifiedLeftImage,
 					rectifiedShearLeftImage, H1s, mMatLeft.size());
 			Imgproc.warpPerspective(rectifiedRightImage,
@@ -741,6 +767,11 @@ public class DepthMapper implements Callable<Bitmap> {
 			MichelangeloCamera.saveBitmap(
 					MichelangeloCamera.grayMatToBitmap(combine2),
 					"rectWarpShearCombined");
+			
+
+			
+			
+			
 			// Calculate disparities of original
 			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
 			// 13);
@@ -765,7 +796,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
 					255.0 / (96 * 16.));
 			
-			Server.sendGray(disparityBMFinal);
+			//Server.sendGray(disparityBMFinal);
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinal);
 			Log.w(TAG, "Disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
@@ -776,12 +807,14 @@ public class DepthMapper implements Callable<Bitmap> {
 					disparityBM);
 			minMax = Core.minMaxLoc(disparityBM);
 			minVal = minMax.minVal;
-			maxVal = minMax.maxVal;
+			maxVal = minMax.maxVal;									
+			
 			// disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
 			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
 			disparityBM.convertTo(disparityBMFinalRect,
 					disparityBMFinalRect.type(), 255.0 / (96 * 16.));
-			
+
+			Server.sendGray(disparityBMFinalRect);
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinalRect);
 			Log.w(TAG, "Rectified disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
@@ -789,7 +822,7 @@ public class DepthMapper implements Callable<Bitmap> {
 
 			// Calculate disparities of rectified and sheared
 			sgBlockMatcher.compute(rectifiedShearLeftImage,
-					rectifiedRightImage, disparityBM);
+					rectifiedShearRightImage, disparityBM);
 			minMax = Core.minMaxLoc(disparityBM);
 			minVal = minMax.minVal;
 			maxVal = minMax.maxVal;
@@ -799,7 +832,6 @@ public class DepthMapper implements Callable<Bitmap> {
 					disparityBMFinalRectShear.type(), 255.0 / (96 * 16.));
 			
 			//Server.send(disparityBMFinalRect);
-			
 			result = MichelangeloCamera
 					.grayMatToBitmap(disparityBMFinalRectShear);
 			Log.w(TAG,
