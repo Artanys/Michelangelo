@@ -28,6 +28,7 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -43,6 +44,8 @@ import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
+import android.media.ThumbnailUtils;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -278,6 +281,16 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mSensor.NumberOfCaptures = 1;
 		}
 	}
+	
+	private void promptIntents(){
+		Intent intent = new Intent();
+		intent.setAction(android.content.Intent.ACTION_VIEW);
+		String url = "http://naumann.cloudapp.net/samples/vikram.vtk";
+		File file = new File("/sdcard/Download/hand.vtk");
+		//intent.setDataAndType(Uri.fromFile(file), "doc/*");
+		intent.setData(Uri.parse(url));
+		startActivity(intent); 
+	}
 
 	/** A safe way to get an instance of the Camera object. */
 	/**
@@ -409,6 +422,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mPreview.setVisibility(View.VISIBLE);
 
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+			//thumbnail
+			Bitmap thumbnail = ThumbnailUtils.extractThumbnail(bitmap, 100, 100);
+			saveBitmap(thumbnail,"THUMB_TEST");
+			
 			int width = imageBox.getWidth();
 			int height = imageBox.getHeight();
 
@@ -469,9 +486,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Mat graySample1 = colorMatToGrayscale(matSample1);
 			Mat graySample2 = colorMatToGrayscale(matSample2);
 
-
+			
+			//promptIntents();
 			DepthMapper dm = new DepthMapper((int) (focalLength * 10),
-					bmHeight, grayMat, ImageMat);
+					bmHeight, grayMat, ImageMat, thumbnail);
 			
 			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth,
 			// bmHeight));
@@ -759,6 +777,39 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 	public static void saveBitmap(Bitmap bitmap, String tag) {
 		File resultFile = getOutputMediaFile(MEDIA_TYPE_IMAGE, tag);
+		if (resultFile == null) {
+			Log.d(TAG, "Error creating media file, check storage permissions");
+			return;
+		}
+
+		try {
+			Log.d(TAG, "Storing bitmap file.");
+			FileOutputStream fosResult = new FileOutputStream(resultFile);
+			Log.d(TAG, "Compressing bitmap.");
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fosResult);
+			Log.d(TAG, "Finished compressing.");
+			Log.d(TAG, "Writing to file.");
+			fosResult.flush();
+			fosResult.close();
+			Log.d(TAG, "Bitmap written.");
+			Thread.sleep(500);
+		} catch (FileNotFoundException e) {
+			Log.d(TAG, "File not found: " + e.getMessage());
+		} catch (IOException e) {
+			Log.d(TAG, "Error accessing file: " + e.getMessage());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	public static void saveThumbnail(Bitmap bitmap, String name) {
+		 File root = android.os.Environment.getExternalStorageDirectory();               
+         File dir = new File (root.getAbsolutePath() + "/Pictures/Michelangelo/models");
+         if(dir.exists()==false) {
+              dir.mkdirs();
+         }
+		File resultFile = new File(dir, name);;
 		if (resultFile == null) {
 			Log.d(TAG, "Error creating media file, check storage permissions");
 			return;

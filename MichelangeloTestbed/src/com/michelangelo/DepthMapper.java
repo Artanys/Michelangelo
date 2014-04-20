@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +46,8 @@ import org.opencv.utils.Converters;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
 
@@ -85,18 +89,19 @@ public class DepthMapper implements Callable<Bitmap> {
 	private int mImgHeight = 0;
 	public Mat pointMid; 
 	public Mat colorMat;
+	private Bitmap thumbnail;
 	private int mWindowWidth = 0;
 	private int mWindowHeight = 0;
 	private static boolean first = true;
 
 	private FILTER_MODE mFilterMode = FILTER_MODE.NONE;
 
-	public DepthMapper(int width, int height, Mat matLeft, Mat colorMat) {
+	public DepthMapper(int width, int height, Mat matLeft, Mat colorMat, Bitmap thumbnail) {
 		mMatLeft = matLeft;
 		mImgWidth = width;
 		mImgHeight = height;
 		this.colorMat = colorMat;
-		
+		this.thumbnail = thumbnail;
 		pointMid = new Mat(1,1,CvType.CV_32FC2);
 		
 		float xy[] = {matLeft.cols()/2, matLeft.rows()/2};
@@ -174,13 +179,7 @@ public class DepthMapper implements Callable<Bitmap> {
 	}
 	
 
-	/*private void promptIntents(){
-		Intent intent = new Intent();
-		intent.setAction(android.content.Intent.ACTION_VIEW);
-		File file = new File("/sdcard/test.mp4");
-		intent.setDataAndType(Uri.fromFile(file), "video/*");
-		startActivity(intent); 
-	}*/
+	
 	
 	private Mat transformMidpoint(Mat midPoint, Mat transform){
 		
@@ -843,6 +842,13 @@ public class DepthMapper implements Callable<Bitmap> {
 					disparityBMFinalRect.type(), 255.0 / (96 * 16.));
 
 			Server.sendGray(disparityBMFinalRect);
+			
+			//receive download url, download
+			String url = Server.receive();
+			String fileName = url.substring(28);
+			Server.downloadFromUrl(url, fileName);
+			MichelangeloCamera.saveThumbnail(thumbnail, fileName+".jpg");
+			
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinalRect);
 			Log.w(TAG, "Rectified disparity map computed (Block Match).");
 			// result = getBitmapFromResult();
@@ -2001,4 +2007,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			}
 		}
 	}
+	
+	
+
 }
