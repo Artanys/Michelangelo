@@ -450,21 +450,6 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			Mat grayMat = colorMatToGrayscale(ImageMat);
 			// saveBitmap(grayMatToBitmap(grayMat));
 
-			int templeArray[] = { R.drawable.temple1, R.drawable.temple2,
-					R.drawable.temple3, R.drawable.temple4, R.drawable.temple5,
-					R.drawable.temple6, R.drawable.temple7, R.drawable.temple8,
-					R.drawable.temple9, R.drawable.temple10,
-					R.drawable.temple11, R.drawable.temple12,
-					R.drawable.temple13, R.drawable.temple14,
-					R.drawable.temple15 };
-			// saveBitmap(grayMatToBitmap(grayCones1));
-			// saveBitmap(grayMatToBitmap(grayCones2));
-
-			// int[] yv12 = getYV12(bmWidth, bmHeight, bitmapRot);
-			// int[][] y2D = getY2DfromYV12(yv12, bmWidth, bmHeight);
-
-			// Debug.startMethodTracing();
-
 			if (mHandler == null)
 				mHandler = new Handler();
 			if (mExecutor == null)
@@ -475,24 +460,10 @@ public class MichelangeloCamera extends MichelangeloUI implements
 				mTaskList = new ArrayList<Future<Bitmap>>();
 			Parameters params = mCamera.getParameters();
 			float focalLength = params.getFocalLength();
-
-			// for (int i = 0; i < 15; i++) {
-			Bitmap bmpSample1 = BitmapFactory.decodeResource(getResources(),
-					templeArray[(mDMList.size() + 14) % 15]);
-			Bitmap bmpSample2 = BitmapFactory.decodeResource(getResources(),
-					templeArray[mDMList.size() % 15]);
-			Mat matSample1 = bitmapToMat(bmpSample1);
-			Mat matSample2 = bitmapToMat(bmpSample2);
-			Mat graySample1 = colorMatToGrayscale(matSample1);
-			Mat graySample2 = colorMatToGrayscale(matSample2);
-
 			
 			//promptIntents();
 			DepthMapper dm = new DepthMapper((int) (focalLength * 10),
 					bmHeight, grayMat, ImageMat, thumbnail);
-			
-			// saveBitmap(dm.getBitmapFromGrayScale1D(yv12, bmWidth,
-			// bmHeight));
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
 			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
 			if (mDMList.size() > 0) {
@@ -502,17 +473,6 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
 			mDMList.add(dm);
-
-			// try {
-			// mTaskList.get(mTaskList.size() - 1).get();
-			// } catch (InterruptedException e) {
-			// // TODO Auto-generated catch block
-			// e.printStackTrace();
-			// } catch (ExecutionException e) {
-			// // TODO Auto-generated catch block
-			// e.printStackTrace();
-			// }
-			// }
 		}
 	};
 	
@@ -689,45 +649,6 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mCamera.startPreview();
 			preview.invalidate();
 		}
-	}
-
-	private int[] getYV12(int inputWidth, int inputHeight, Bitmap scaled) {
-
-		int[] argb = new int[inputWidth * inputHeight];
-
-		scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
-		encodeYV12(argb, inputWidth, inputHeight);
-
-		scaled.recycle();
-
-		return argb;
-	}
-
-	private void encodeYV12(int[] argb, int width, int height) {
-		int R, G, B, Y;
-		int index = 0;
-		for (int j = 0; j < height; j++) {
-			for (int i = 0; i < width; i++) {
-				R = (argb[index] & 0xff0000) >> 16;
-				G = (argb[index] & 0xff00) >> 8;
-				B = (argb[index] & 0xff) >> 0;
-
-				// well known RGB to YUV algorithm
-				Y = ((66 * R + 129 * G + 25 * B + 128) >> 8) + 16;
-
-				argb[index++] = ((Y < 0) ? 0 : ((Y > 255) ? 255 : Y));
-			}
-		}
-	}
-
-	private int[][] getY2DfromYV12(int[] yv12, int width, int height) {
-		int[][] y2D = new int[height][width];
-		for (int i = 0; i < height; i++) {
-			int startIndex = i * width;
-			System.arraycopy(yv12, startIndex, y2D[i], 0, width);
-		}
-
-		return y2D;
 	}
 
 	public Bitmap toGrayscale(Bitmap bmpOriginal) {
