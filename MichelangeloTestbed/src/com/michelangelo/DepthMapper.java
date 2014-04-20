@@ -126,7 +126,6 @@ public class DepthMapper implements Callable<Bitmap> {
 		StrictMode.setThreadPolicy(policy);
 		initMatrices();
 		
-
 		filters.put(FILTER_MODE.MEDIAN, new FilterFunc() {
 			public int filter(Window window) {
 				return window.getMedian();
@@ -231,31 +230,23 @@ public class DepthMapper implements Callable<Bitmap> {
 			//Server.send(temp);
 			
 			// Detect features
-			// Imgproc.equalizeHist(mMatLeft, mMatLeft);
-			// Imgproc.equalizeHist(mMatRight, mMatRight);
-
-			Mat combineOrig = combineImages(mMatLeft, mMatRight);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(combineOrig),
-					"origCombined");
-
-			FeatureDetector orbDetector = FeatureDetector
+			FeatureDetector fd = FeatureDetector
 					.create(FeatureDetector.FAST);
 			MatOfKeyPoint leftKP = new MatOfKeyPoint();
 			MatOfKeyPoint rightKP = new MatOfKeyPoint();
-			orbDetector.detect(mMatLeft, leftKP);
-			orbDetector.detect(mMatRight, rightKP);
+			fd.detect(mMatLeft, leftKP);
+			fd.detect(mMatRight, rightKP);
 
 			// Extract feature descriptors
-			DescriptorExtractor extractor = DescriptorExtractor
+			DescriptorExtractor de = DescriptorExtractor
 					.create(DescriptorExtractor.BRIEF);
 			Mat leftKPDesc = new Mat();
 			Mat rightKPDesc = new Mat();
-			extractor.compute(mMatLeft, leftKP, leftKPDesc);
-			extractor.compute(mMatRight, rightKP, rightKPDesc);
+			de.compute(mMatLeft, leftKP, leftKPDesc);
+			de.compute(mMatRight, rightKP, rightKPDesc);
 
 			// Match features
-			DescriptorMatcher matcher = DescriptorMatcher
+			DescriptorMatcher dm = DescriptorMatcher
 					.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 			List<MatOfDMatch> featMatchesList = new ArrayList<MatOfDMatch>();
 			List<MatOfDMatch> featMatchesListReverse = new ArrayList<MatOfDMatch>();
@@ -263,53 +254,11 @@ public class DepthMapper implements Callable<Bitmap> {
 			featMatchesList.add(new MatOfDMatch());
 			featMatchesListReverse.add(new MatOfDMatch());
 			featMatchesListReverse.add(new MatOfDMatch());
-			MatOfDMatch featMatches = new MatOfDMatch();
-			// matcher.match(leftKPDesc, rightKPDesc, featMatches);
-			matcher.knnMatch(leftKPDesc, rightKPDesc, featMatchesList, 2);
-			matcher.knnMatch(rightKPDesc, leftKPDesc, featMatchesListReverse, 2);
-
-			// Save features to image
-
-			Mat outKPImage1 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
-			Mat outKPImage2 = new Mat(mMatLeft.size(), CvType.CV_8UC4);
-			Features2d.drawKeypoints(mMatLeft, leftKP, outKPImage1, new Scalar(
-					0, 255, 0, 255), 0);
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(outKPImage), "leftkp");
-			Features2d.drawKeypoints(mMatRight, rightKP, outKPImage2,
-					new Scalar(255, 0, 0, 255), 0);
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(outKPImage), "rightkp");
-			Mat combineFeatures = combineImages(outKPImage1, outKPImage2);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.colorMatToBitmap(combineFeatures),
-					"featuresCombined");
-
-			// Calculation of max and min distances between keypoints
-			float max_dist = 0;
-			float min_dist = 100;
-			DMatch[] matchesArray = featMatches.toArray();
+			dm.knnMatch(leftKPDesc, rightKPDesc, featMatchesList, 2);
+			dm.knnMatch(rightKPDesc, leftKPDesc, featMatchesListReverse, 2);
+			
+			// Filter the good matches
 			LinkedList<DMatch> goodMatchesList = new LinkedList<DMatch>();
-			// for (int i = 0; i < leftKPDesc.rows(); i++) {
-			// float dist = matchesArray[i].distance;
-			// if (dist < min_dist)
-			// min_dist = dist;
-			// if (dist > max_dist)
-			// max_dist = dist;
-			// }
-			// for (int i = 0; i < rightKPDesc.rows(); i++) {
-			// if (matchesArray[i].distance < Math.max(.02, 5 * min_dist)) {
-			// if (matchesArray[i].distance < (.6 * max_dist)) {
-
-			// for (int i = 0; i < featMatchesList.size(); i++) {
-			// DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
-			// if (matchesArray1[0].distance < (.8 *
-			// matchesArray1[1].distance))
-			// {
-			// goodMatchesList.addLast(matchesArray1[0]);
-			// }
-			// }
-
 			for (int i = 0; i < featMatchesList.size(); i++) {
 				DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
 				if (matchesArray1[0].distance < (.65 * matchesArray1[1].distance)) {
@@ -321,39 +270,10 @@ public class DepthMapper implements Callable<Bitmap> {
 				}
 			}
 
-			// double tresholdDist = 0.25 * Math
-			// .sqrt((double) (mMatLeft.size().height
-			// * mMatLeft.size().height + mMatLeft.size().width
-			// * mMatLeft.size().width));
-			//
-			// KeyPoint[] leftKPArray = leftKP.toArray();
-			// KeyPoint[] rightKPArray = rightKP.toArray();
-			// for (int i = 0; i < featMatchesList.size(); ++i) {
-			// DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
-			// for (int j = 0; j < matchesArray1.length; j++) {
-			// DMatch possibleMatch = matchesArray1[j];
-			// Point from = leftKPArray[possibleMatch.queryIdx].pt;
-			// Point to = rightKPArray[possibleMatch.trainIdx].pt;
-			// // Point to = keypoints_2[matches[i][j].trainIdx].pt;
-			//
-			// // calculate local distance for each possible match
-			// double dist = Math.sqrt((from.x - to.x) * (from.x - to.x)
-			// + (from.y - to.y) * (from.y - to.y));
-			//
-			// // save as best match if local distance is in specified area
-			// // and on same height
-			// if (dist < tresholdDist && Math.abs(from.y - to.y) < 25) {
-			// goodMatchesList.addLast(possibleMatch);
-			// // j = matches[i].size();
-			// break;
-			// }
-			// }
-			// }
-
-			MatOfDMatch goodMatches = new MatOfDMatch();
-			goodMatches.fromList(goodMatchesList);
 
 			// Get keypoints of good matches
+			MatOfDMatch goodMatches = new MatOfDMatch();
+			goodMatches.fromList(goodMatchesList);
 			List<KeyPoint> kpListLeft = leftKP.toList();
 			List<KeyPoint> kpListRight = rightKP.toList();
 			List<KeyPoint> kpListGoodLeft = new ArrayList<KeyPoint>();
@@ -374,6 +294,9 @@ public class DepthMapper implements Callable<Bitmap> {
 							.addLast(kpListRight.get(goodMatchesList.get(i).trainIdx).pt);
 					kpListGoodRight
 							.add(kpListRight.get(goodMatchesList.get(i).trainIdx));
+				} else {
+					goodMatchesList.remove(i);
+					i--;
 				}
 			}
 			
@@ -408,68 +331,14 @@ public class DepthMapper implements Callable<Bitmap> {
 			}
 
 			Log.w(TAG, "REMOVED ALL INDICES");
-			
+
+			// Find fundamental matrix			
 			MatOfPoint2f leftKPf = new MatOfPoint2f();
 			MatOfPoint2f rightKPf = new MatOfPoint2f();
 			leftKPf.fromList(goodKPLeft);
 			rightKPf.fromList(goodKPRight);
-
-			MatOfKeyPoint matGoodKPLeft = new MatOfKeyPoint();
-			MatOfKeyPoint matGoodKPRight = new MatOfKeyPoint();
-			matGoodKPLeft.fromList(kpListGoodLeft);
-			matGoodKPRight.fromList(kpListGoodRight);
-			Features2d.drawKeypoints(mMatLeft, matGoodKPLeft, outKPImage1,
-					new Scalar(255, 255, 0, 255), 0);
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(outKPImage),
-			// "leftmatches");
-			Features2d.drawKeypoints(mMatRight, matGoodKPRight, outKPImage2,
-					new Scalar(255, 0, 255, 255), 0);
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(outKPImage),
-			// "rightmatches");
-			combineFeatures = combineImages(outKPImage1, outKPImage2);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.colorMatToBitmap(combineFeatures),
-					"matchesCombined");
-
-			// Undistort feature points
-			MatOfPoint2f leftUKPf = new MatOfPoint2f();
-			MatOfPoint2f rightUKPf = new MatOfPoint2f();
-			Imgproc.undistortPoints(leftKPf, leftUKPf, mCameraMatrix,
-					mDistCoeffs);
-			Imgproc.undistortPoints(rightKPf, rightUKPf, mCameraMatrix,
-					mDistCoeffs);
-
-			// Find fundamental matrix
-			Mat fundMat = Calib3d.findFundamentalMat(leftUKPf, rightUKPf,
-					Calib3d.RANSAC, 3, 0.99);
 			Mat fundMat2 = Calib3d.findFundamentalMat(leftKPf, rightKPf,
 					Calib3d.RANSAC, 3, 0.99);
-			
-			//Mat midFund = transformMidpoint(pointMid, fundMat2);
-			
-			
-			// Compute epilines
-			Mat linesLeftU = new Mat();
-			Mat linesRightU = new Mat();
-			Mat linesLeft = new Mat();
-			Mat linesRight = new Mat();
-			Calib3d.computeCorrespondEpilines(leftUKPf, 1, fundMat, linesRightU);
-			Calib3d.computeCorrespondEpilines(rightUKPf, 2, fundMat, linesLeftU);
-			Calib3d.computeCorrespondEpilines(leftKPf, 1, fundMat2, linesRight);
-			Calib3d.computeCorrespondEpilines(rightKPf, 2, fundMat2, linesLeft);
-
-			// Draw epilines
-			Mat epilineLeftU = drawEpilines(mMatLeft, linesLeftU, leftUKPf);
-			Mat epilineRightU = drawEpilines(mMatRight, linesRightU, rightUKPf);
-			Mat epilineLeft = drawEpilines(mMatLeft, linesLeft, leftKPf);
-			Mat epilineRight = drawEpilines(mMatRight, linesRight, rightKPf);
-
-			Mat combineEpiline = combineImages(epilineLeft, epilineRight);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.colorMatToBitmap(combineEpiline),
-					"epilineCombine");
 
 			// Rectify
 			Mat rectHomog1 = new Mat();
@@ -480,8 +349,6 @@ public class DepthMapper implements Callable<Bitmap> {
 					mMatLeft.size(), rectHomog1, rectHomog2, 5);
 			Calib3d.stereoRectifyUncalibrated(leftKPf, rightKPf, fundMat2,
 					mMatLeft.size(), H1, H2, 5);
-			// Calib3d.stereoRectifyUncalibrated(leftUKPf, rightUKPf, fundMat,
-			// mMatLeft.size(), rectHomog1, rectHomog2, 5);
 
 			rectHomog1.convertTo(rectHomog1, CvType.CV_32FC1);
 			rectHomog2.convertTo(rectHomog2, CvType.CV_32FC1);
@@ -494,117 +361,23 @@ public class DepthMapper implements Callable<Bitmap> {
 			newCameraMatrix = Calib3d.getOptimalNewCameraMatrix(mCameraMatrix,
 					mDistCoeffs, mMatLeft.size(), 1);
 
-			// Left remap and rectify
-			Mat mapMat1 = new Mat();
-			Mat mapMat2 = new Mat();
-			// Mat rgbaOrigImage = new Mat(mMatLeft.size(), CvType.CV_8UC4);
-			Imgproc.initUndistortRectifyMap(mCameraMatrix, mDistCoeffs,
-					rectMat1, mCameraMatrix, mMatLeft.size(), CvType.CV_16SC2,
-					mapMat1, mapMat2);
-			Mat rectifiedLeftImage = new Mat(mapMat1.size(), CvType.CV_8UC1);
-			Mat rectifiedEpilineLeftImage = new Mat(mapMat1.size(),
+			// Left rectify
+			Mat rectifiedLeftImage = new Mat(mMatLeft.size(), CvType.CV_8UC1);
+			Mat rectifiedShearLeftImage = new Mat(mMatLeft.size(),
 					CvType.CV_8UC1);
-			Mat rectifiedShearLeftImage = new Mat(mapMat1.size(),
-					CvType.CV_8UC1);
-			Mat rectifiedShearEpilineLeftImage = new Mat(mapMat1.size(),
-					CvType.CV_8UC1);
-			// Imgproc.cvtColor(mMatLeft, rgbaOrigImage,
-			// Imgproc.COLOR_GRAY2RGBA);
-			Imgproc.remap(mMatLeft, rectifiedLeftImage, mapMat1, mapMat2,
-					Imgproc.INTER_LINEAR);
-
-			// Right remap and rectify
-			Mat mapMat3 = new Mat();
-			Mat mapMat4 = new Mat();
-			Imgproc.initUndistortRectifyMap(mCameraMatrix, mDistCoeffs,
-					rectMat2, mCameraMatrix, mMatLeft.size(), CvType.CV_16SC2,
-					mapMat3, mapMat4);
-			Mat rectifiedRightImage = new Mat(mapMat3.size(), CvType.CV_8UC1);
-			Mat rectifiedEpilineRightImage = new Mat(mapMat3.size(),
-					CvType.CV_8UC1);
-			Mat rectifiedShearRightImage = new Mat(mapMat3.size(),
-					CvType.CV_8UC1);
-			Mat rectifiedShearEpilineRightImage = new Mat(mapMat3.size(),
-					CvType.CV_8UC1);
-			Imgproc.remap(mMatRight, rectifiedRightImage, mapMat3, mapMat4,
-					Imgproc.INTER_LINEAR);
-
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.grayMatToBitmap(rectifiedLeftImage),
-			// "rectifyleft");
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.colorMatToBitmap(rectifiedLeftImage),
-			// "rectifyleft");
-			// MichelangeloCamera.saveBitmap(
-			// MichelangeloCamera.grayMatToBitmap(rectifiedRightImage),
-			// "rectifyright");
-
-			Mat combine = combineImages(mMatLeft, mMatRight);
-
-			for (int i = 0; i < goodKPLeft.size(); i++) {
-				Scalar color = new Scalar(randInt(0, 255), randInt(0, 255),
-						randInt(0, 255), 255);
-
-				int x0 = (int) goodKPLeft.get(i).x;
-				int y0 = (int) goodKPLeft.get(i).y;
-				int x1 = (int) goodKPRight.get(i).x + mMatLeft.cols();
-				int y1 = (int) goodKPRight.get(i).y;
-
-				Core.line(combine, new Point(x0, y0), new Point(x1, y1), color,
-						1);
-				Core.circle(combine, new Point(x0, y0), 2, color, -1);
-				Core.circle(combine, new Point(x1, y1), 2, color, -1);
-			}
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(combine),
-					"featuresCombined");
-
-			Mat combine2 = combineImages(rectifiedLeftImage,
-					rectifiedRightImage);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(combine2),
-					"rectCombined");
-
-
-			Mat colorRect = new Mat(mapMat1.size(), colorMat.type());
-			
-			Imgproc.warpPerspective(colorMat, colorRect, H1,
-					colorMat.size());
-			
-			Mat midFundLeft = transformMidpoint(pointMid, H1);
-			Mat midFundRight = transformMidpoint(pointMid, H2);
-			
-		
-
-			
 			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
-					mMatLeft.size());
+							mMatLeft.size());
+
+			// Right rectify
+			Mat rectifiedRightImage = new Mat(mMatLeft.size(), CvType.CV_8UC1);
 			Imgproc.warpPerspective(mMatRight, rectifiedRightImage, H2,
 					mMatRight.size());
 			
+			// Transform midpoint
+			Mat midFundLeft = transformMidpoint(pointMid, H1);
+			Mat midFundRight = transformMidpoint(pointMid, H2);
 
-			
-			//Calculate Warped Midpoint
-			/*Mat pT = Imgproc.getPerspectiveTransform(mMatLeft, rectifiedLeftImage);
-			Mat mid = new Mat(3,1,5,new Scalar(midPoint));
-			Core.multiply(pT, mid, mid);*/
-			
-
-
-			
-			
-			Imgproc.warpPerspective(epilineLeft, rectifiedEpilineLeftImage, H1,
-					mMatLeft.size());
-			Imgproc.warpPerspective(epilineRight, rectifiedEpilineRightImage,
-					H2, mMatRight.size());
-
-			
-			combine2 = combineImages(rectifiedEpilineLeftImage,
-					rectifiedEpilineRightImage);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(combine2),
-					"rectWarpCombined");
-
+			// Calculate shear transform
 			double h1Array[] = new double[9];
 			H1.get(0, 0, h1Array);
 			Mat H1p = new Mat(3, 3, H1.type());
@@ -679,125 +452,23 @@ public class DepthMapper implements Callable<Bitmap> {
 			Mat H1s = new Mat(3, 3, H1.type());
 			double h1sArray[] = { k1, k2, 0, 0, 1, 0, 0, 0, 1 };
 			H1s.put(0, 0, h1sArray);
-
-			double h2Array[] = new double[9];
-			H2.get(0, 0, h2Array);
-			Mat H2p = new Mat(3, 3, H2.type());
-			double h2pArray[] = { 1, 0, 0, 0, 1, 0, h2Array[6], h2Array[7], 1 };
-			H2p.put(0, 0, h2pArray);
-			Mat H2r = new Mat(3, 3, H2.type());
-			double h2rArray[] = { h2Array[4] - (h2Array[5] * h2Array[7]),
-					(h2Array[5] * h2Array[6]) - h2Array[3], 0,
-					h2Array[3] - (h2Array[5] * h2Array[6]),
-					h2Array[4] - (h2Array[5] * h2Array[7]), h2Array[5], 0, 0, 1 };
-			H2r.put(0, 0, h2rArray);
-			Mat pointA2 = new Mat(3, 1, H2.type());
-			Mat pointB2 = new Mat(3, 1, H2.type());
-			Mat pointC2 = new Mat(3, 1, H2.type());
-			Mat pointD2 = new Mat(3, 1, H2.type());
-			double pointA2Array[] = { (mMatLeft.cols() - 1) / 2, 0, 1 };
-			double pointB2Array[] = { mMatLeft.cols() - 1,
-					(mMatLeft.rows() - 1) / 2, 1 };
-			double pointC2Array[] = { (mMatLeft.cols() - 1) / 2,
-					mMatLeft.rows() - 1, 1 };
-			double pointD2Array[] = { 0, (mMatLeft.rows() - 1) / 2, 1 };
-			pointA2.put(0, 0, pointA2Array);
-			pointB2.put(0, 0, pointB2Array);
-			pointC2.put(0, 0, pointC2Array);
-			pointD2.put(0, 0, pointD2Array);
-			Mat pointA2prime = new Mat();
-			Mat pointB2prime = new Mat();
-			Mat pointC2prime = new Mat();
-			Mat pointD2prime = new Mat();
-			Mat H2rp = new Mat(3, 3, H2.type());
-			Core.gemm(H2r, H2p, 1, new Mat(), 0, H2rp);
-			Core.gemm(H2rp, pointA2, 1, new Mat(), 0, pointA2prime);
-			Core.gemm(H2rp, pointB2, 1, new Mat(), 0, pointB2prime);
-			Core.gemm(H2rp, pointC2, 1, new Mat(), 0, pointC2prime);
-			Core.gemm(H2rp, pointD2, 1, new Mat(), 0, pointD2prime);
-			double pointA2primeArray[] = new double[3];
-			double pointB2primeArray[] = new double[3];
-			double pointC2primeArray[] = new double[3];
-			double pointD2primeArray[] = new double[3];
-			pointA2prime.get(0, 0, pointA2primeArray);
-			pointB2prime.get(0, 0, pointB2primeArray);
-			pointC2prime.get(0, 0, pointC2primeArray);
-			pointD2prime.get(0, 0, pointD2primeArray);
-			for (int i = 0; i < 3; i++) {
-				pointA2primeArray[i] /= pointA2primeArray[2];
-				pointB2primeArray[i] /= pointB2primeArray[2];
-				pointC2primeArray[i] /= pointC2primeArray[2];
-				pointD2primeArray[i] /= pointD2primeArray[2];
-			}
-			Mat pointX2 = new Mat(3, 1, H2.type());
-			Mat pointY2 = new Mat(3, 1, H2.type());
-			pointA2prime.put(0, 0, pointA2primeArray);
-			pointB2prime.put(0, 0, pointB2primeArray);
-			pointC2prime.put(0, 0, pointC2primeArray);
-			pointD2prime.put(0, 0, pointD2primeArray);
-			Core.subtract(pointB2prime, pointD2prime, pointX2);
-			Core.subtract(pointC2prime, pointA2prime, pointY2);
-			double pointX2Array[] = new double[3];
-			double pointY2Array[] = new double[3];
-			pointX2.get(0, 0, pointX2Array);
-			pointY2.get(0, 0, pointY2Array);
-			double k3 = ((mMatLeft.rows() * mMatLeft.rows() * pointX2Array[1] * pointX2Array[1]) + (mMatLeft
-					.cols() * mMatLeft.cols() * pointY2Array[1] * pointY2Array[1]))
-					/ ((mMatLeft.cols() * mMatLeft.rows()) * ((pointX2Array[1] * pointY2Array[0]) - (pointX2Array[0] * pointY2Array[1])));
-			double k4 = ((mMatLeft.rows() * mMatLeft.rows() * pointX2Array[0] * pointX2Array[1]) + (mMatLeft
-					.cols() * mMatLeft.cols() * pointY2Array[0] * pointY2Array[1]))
-					/ ((mMatLeft.cols() * mMatLeft.rows()) * ((pointX2Array[0] * pointY2Array[1]) - (pointX2Array[1] * pointY2Array[0])));
-			if (k3 < 0) {
-				k3 *= -1;
-				k4 *= -1;
-			}
-			Mat H2s = new Mat(3, 3, H2.type());
-			double h2sArray[] = { k3, k4, 0, 0, 1, 0, 0, 0, 1 };
-			H2s.put(0, 0, h2sArray);
-
-
-			Mat colorRectShear = new Mat(mapMat1.size(), colorRect.type());
-
-			Imgproc.warpPerspective(colorRect,
-					colorRectShear, H1s, colorRect.size());
 			
-			
+			// Correct shearing
 			Imgproc.warpPerspective(rectifiedLeftImage,
-					rectifiedShearLeftImage, H1s, mMatLeft.size());
-			Imgproc.warpPerspective(rectifiedRightImage,
-					rectifiedShearRightImage, H2s, mMatRight.size());
-			
+					rectifiedShearLeftImage, H1s, mMatLeft.size());			
 			
 			Mat midShear = transformMidpoint(midFundLeft,H1s);
 			
 			float [] newMidPointLeft = new float[2];
-			midShear.get(0, 0, newMidPointLeft);
+			pointMid.get(0, 0, newMidPointLeft);
 			/*float [] newMidPointRight = new float[2];
 			midFundRight.get(0, 0, newMidPointRight);
 			
 			double Q33 = ( newMidPointLeft[0] - newMidPointRight[0] ) * .06666666666;*/
 			
-			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);
-			
-			
-			Server.sendColor(colorRectShear);
-
-
-			
-			Imgproc.warpPerspective(rectifiedEpilineLeftImage,
-					rectifiedShearEpilineLeftImage, H1s, mMatLeft.size());
-			Imgproc.warpPerspective(rectifiedEpilineRightImage,
-					rectifiedShearEpilineRightImage, H2s, mMatRight.size());
-
-			combine2 = combineImages(rectifiedShearEpilineLeftImage,
-					rectifiedEpilineRightImage);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(combine2),
-					"rectWarpShearCombined");
-			
-
-			
-			
+			// Send data to server
+			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);			
+			Server.sendColor(mMatLeft);			
 			
 			// Calculate disparities of original
 			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
@@ -810,91 +481,23 @@ public class DepthMapper implements Callable<Bitmap> {
 					CvType.CV_32F);
 			Mat disparityBMFinal = new Mat(mMatLeft.rows(), mMatLeft.cols(),
 					CvType.CV_8U);
-			Mat disparityBMFinalRect = new Mat(mMatLeft.rows(),
-					mMatLeft.cols(), CvType.CV_8U);
-			Mat disparityBMFinalRectShear = new Mat(mMatLeft.rows(),
-					mMatLeft.cols(), CvType.CV_8U);
-			sgBlockMatcher.compute(mMatLeft, mMatRight, disparityBM);
-			MinMaxLocResult minMax = Core.minMaxLoc(disparityBM);
-			double minVal = minMax.minVal;
-			double maxVal = minMax.maxVal;
-			// disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
-			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
+			sgBlockMatcher.compute(rectifiedShearLeftImage, rectifiedRightImage, disparityBM);
 			disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
 					255.0 / (96 * 16.));
-			
-			//Server.sendGray(disparityBMFinal);
 			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinal);
 			Log.w(TAG, "Disparity map computed (Block Match).");
-			// result = getBitmapFromResult();
-			// MichelangeloCamera.saveBitmap(result, "disporiginal");
-
-			// Calculate disparities of rectified
-			sgBlockMatcher.compute(rectifiedLeftImage, rectifiedRightImage,
-					disparityBM);
-			minMax = Core.minMaxLoc(disparityBM);
-			minVal = minMax.minVal;
-			maxVal = minMax.maxVal;									
 			
-			// disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
-			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
-			disparityBM.convertTo(disparityBMFinalRect,
-					disparityBMFinalRect.type(), 255.0 / (96 * 16.));
-
-			Server.sendGray(disparityBMFinalRect);
+			// Send disparity to server		
+			Server.sendGray(disparityBMFinal);			
 			
-			//receive download url, download
+			// Receive download url, download	
 			String url = Server.receive();
 			String fileName = url.substring(28);
 			Server.downloadFromUrl(url, fileName);
 			MichelangeloCamera.saveThumbnail(thumbnail, fileName+".jpg");
-			
-			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinalRect);
-			Log.w(TAG, "Rectified disparity map computed (Block Match).");
-			// result = getBitmapFromResult();
-			// MichelangeloCamera.saveBitmap(result, "disprectify");
-
-			// Calculate disparities of rectified and sheared
-			sgBlockMatcher.compute(rectifiedShearLeftImage,
-					rectifiedRightImage, disparityBM);
-			minMax = Core.minMaxLoc(disparityBM);
-			minVal = minMax.minVal;
-			maxVal = minMax.maxVal;
-			// disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
-			// 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
-			disparityBM.convertTo(disparityBMFinalRectShear,
-					disparityBMFinalRectShear.type(), 255.0 / (96 * 16.));
-			
-			//Server.send(disparityBMFinalRect);
-			result = MichelangeloCamera
-					.grayMatToBitmap(disparityBMFinalRectShear);
-			Log.w(TAG,
-					"Rectified sheared disparity map computed (Block Match).");
-			// result = getBitmapFromResult();
-			// MichelangeloCamera.saveBitmap(result, "disprectify");
-
-			Mat combineDispRect = combineImages(disparityBMFinal,
-					disparityBMFinalRect);
-			Mat combineDispRectShear = combineImages(combineDispRect,
-					disparityBMFinalRectShear);
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(disparityBMFinalRectShear),
-					"dispShear");
-			MichelangeloCamera.saveBitmap(
-					MichelangeloCamera.grayMatToBitmap(combineDispRectShear),
-					"dispCombined");
-
-			// Mat pointCloudMat = new Mat ( disparityBMFinalRectShear.size(),
-			// CvType.CV_32FC3);
-			// Calib3d.reprojectImageTo3D(disparityBMFinalRectShear,
-			// pointCloudMat, mQMatrix, true);
-		}
+		}		
 		
-	
-		
-		
-		return result;
-		
+		return result;		
 	}
 	
 	
