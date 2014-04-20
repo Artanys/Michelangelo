@@ -473,6 +473,25 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
 			}
 			mDMList.add(dm);
+			/*
+			if(mTaskList.size() > 0) {
+				Bitmap result = null;
+				try {
+					result = mTaskList.get(mTaskList.size() - 1).get();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	
+	 			DepthMapConfirmDialog dispFrag = new DepthMapConfirmDialog();
+	 			
+	 			dispFrag.bmp = result;
+	 			
+	 			dispFrag.show(getFragmentManager(), "message");
+			}*/
 		}
 	};
 	

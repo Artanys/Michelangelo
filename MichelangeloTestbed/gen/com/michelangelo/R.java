@@ -94,51 +94,53 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int translucent_background=0x7f020022;
     }
     public static final class id {
-        public static final int TextView02=0x7f0b001f;
-        public static final int action_delete=0x7f0b002e;
-        public static final int action_settings=0x7f0b002c;
-        public static final int action_share=0x7f0b002d;
-        public static final int alphaSeekBar=0x7f0b0024;
-        public static final int axesToggleButton=0x7f0b0025;
-        public static final int blueSeekBar=0x7f0b0023;
+        public static final int TextView02=0x7f0b0021;
+        public static final int action_delete=0x7f0b0030;
+        public static final int action_settings=0x7f0b002e;
+        public static final int action_share=0x7f0b002f;
+        public static final int alphaSeekBar=0x7f0b0026;
+        public static final int axesToggleButton=0x7f0b0027;
+        public static final int blueSeekBar=0x7f0b0025;
         public static final int button_capture=0x7f0b0011;
         public static final int camera_window=0x7f0b0000;
         public static final int circle=0x7f0b0003;
         public static final int circleLine=0x7f0b0004;
-        public static final int closeButton=0x7f0b001d;
+        public static final int closeButton=0x7f0b001f;
         public static final int content_frame=0x7f0b0015;
+        public static final int depth_map_image=0x7f0b0018;
         public static final int figure_labels=0x7f0b000a;
         public static final int figures=0x7f0b0002;
         public static final int fullscreen_content=0x7f0b0013;
-        public static final int greenSeekBar=0x7f0b0022;
-        public static final int gridToggleButton=0x7f0b0026;
+        public static final int greenSeekBar=0x7f0b0024;
+        public static final int gridToggleButton=0x7f0b0028;
         public static final int gridview=0x7f0b0012;
         public static final int guideBox=0x7f0b000f;
         public static final int horizonLine=0x7f0b0008;
+        public static final int image_dialog_root=0x7f0b0017;
         public static final int last_image=0x7f0b0010;
         public static final int last_image_window=0x7f0b000e;
-        public static final int loadButton=0x7f0b002a;
-        public static final int mainLinearLayout=0x7f0b001e;
+        public static final int loadButton=0x7f0b002c;
+        public static final int mainLinearLayout=0x7f0b0020;
         public static final int main_drawer_layout=0x7f0b0014;
         public static final int main_left_drawer=0x7f0b0016;
-        public static final int objectColorView=0x7f0b0020;
+        public static final int objectColorView=0x7f0b0022;
         public static final int overlay=0x7f0b0001;
         public static final int pitch=0x7f0b000c;
         public static final int pitchLine=0x7f0b0006;
         public static final int pitch_text=0x7f0b0007;
-        public static final int preferncesButton=0x7f0b002b;
-        public static final int redSeekBar=0x7f0b0021;
-        public static final int resetButton=0x7f0b0027;
+        public static final int preferncesButton=0x7f0b002d;
+        public static final int redSeekBar=0x7f0b0023;
+        public static final int resetButton=0x7f0b0029;
         public static final int roll=0x7f0b000d;
         public static final int roll_text=0x7f0b0009;
-        public static final int rotateOrMoveToggleButton=0x7f0b0028;
-        public static final int scroll=0x7f0b001c;
-        public static final int seekBar=0x7f0b001b;
-        public static final int stlFrameLayout=0x7f0b0029;
-        public static final int textView1=0x7f0b0017;
-        public static final int textView2=0x7f0b0018;
-        public static final int textView3=0x7f0b0019;
-        public static final int textView4=0x7f0b001a;
+        public static final int rotateOrMoveToggleButton=0x7f0b002a;
+        public static final int scroll=0x7f0b001e;
+        public static final int seekBar=0x7f0b001d;
+        public static final int stlFrameLayout=0x7f0b002b;
+        public static final int textView1=0x7f0b0019;
+        public static final int textView2=0x7f0b001a;
+        public static final int textView3=0x7f0b001b;
+        public static final int textView4=0x7f0b001c;
         public static final int yaw=0x7f0b000b;
         public static final int yaw_text=0x7f0b0005;
     }
@@ -149,11 +151,12 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int activity_michelangelo_help=0x7f030003;
         public static final int activity_michelangelo_modelviewer=0x7f030004;
         public static final int activity_michelangelo_ui=0x7f030005;
-        public static final int drawer_list_item=0x7f030006;
-        public static final int fragment_capture_settings=0x7f030007;
-        public static final int fragment_modelviewer_settings=0x7f030008;
-        public static final int preferences=0x7f030009;
-        public static final int stl=0x7f03000a;
+        public static final int depthmap_confirm=0x7f030006;
+        public static final int drawer_list_item=0x7f030007;
+        public static final int fragment_capture_settings=0x7f030008;
+        public static final int fragment_modelviewer_settings=0x7f030009;
+        public static final int preferences=0x7f03000a;
+        public static final int stl=0x7f03000b;
     }
     public static final class menu {
         public static final int michelangelo_about=0x7f0a0000;
@@ -163,6 +166,8 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int michelangelo_ui=0x7f0a0004;
     }
     public static final class string {
+        public static final int Accept=0x7f070039;
+        public static final int Reject=0x7f07003a;
         public static final int action_cancel=0x7f070011;
         public static final int action_close_drawer=0x7f07000e;
         public static final int action_delete=0x7f070018;
