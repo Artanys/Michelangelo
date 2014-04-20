@@ -468,7 +468,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			
 			// Send data to server
 			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);			
-			Server.sendColor(mMatLeft);			
+			Server.sendColor(colorMat);			
 			
 			// Calculate disparities of original
 			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
@@ -492,7 +492,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			
 			// Receive download url, download	
 			String url = Server.receive();
-			String fileName = url.substring(28);
+			String fileName = url.substring(33);
 			Server.downloadFromUrl(url, fileName);
 			MichelangeloCamera.saveThumbnail(thumbnail, fileName+".jpg");
 		}		
