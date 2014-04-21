@@ -1,9 +1,10 @@
 package com.michelangelo;
 
+import org.opencv.core.Mat;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.widget.ImageView;
 public class DepthMapConfirmDialog extends DialogFragment{
 	
 	public Bitmap bmp;
+	public DepthPair depthpair;
 	private boolean mRemoved;
 	private int mBackStackId;
 
@@ -41,14 +43,33 @@ public class DepthMapConfirmDialog extends DialogFragment{
         LayoutInflater inflater = getActivity().getLayoutInflater();
         ViewGroup vg = (ViewGroup)inflater.inflate(R.layout.depthmap_confirm, null);
         ImageView image = (ImageView) vg.findViewById(R.id.depth_map_image);
-        image.setImageBitmap(bmp);
+        image.setImageBitmap(depthpair.disp);
         
         builder.setPositiveButton(R.string.Accept, new DialogInterface.OnClickListener() {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
+				
+				Mat colorMat = depthpair.rgb;
+				Mat grayMat = depthpair.disparity;
+				
 				// TODO Auto-generated method stub
 				//mListener.onDialogPositiveClick(DepthMapConfirmDialog.this);
+				Server.initClient();
+
+				Server.sendFrame(colorMat, 1, (double)-1*colorMat.cols()/2, (double)-1*colorMat.rows()/2, 112, -.06666666666, 4);			
+				Server.sendColor(colorMat);
+				
+				// Send disparity to server		
+				Server.sendGray(grayMat);			
+				
+				// Receive download url, download	
+				String url = Server.receive();
+				String fileName = url.substring(33);
+				Server.downloadFromUrl(url, fileName);
+				MichelangeloCamera.saveThumbnail(depthpair.thumbnail, fileName+".jpg");
+				Server.close();
+				
 			}
 		});
         
