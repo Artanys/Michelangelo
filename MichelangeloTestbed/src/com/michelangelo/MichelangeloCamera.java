@@ -237,7 +237,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	public void takePicture() {
 		// get an image from the camera
 		mSensor.firstImage = !mSensor.firstImage;
-		mCamera.autoFocus(null);
+		//mCamera.autoFocus(null);
 		mCamera.takePicture(null, null, mPicture);
 		if(mSensor.getCaptureNumber() == 0){
 			mSensor.InitialYaw = mSensor.Rad_orientation[0];

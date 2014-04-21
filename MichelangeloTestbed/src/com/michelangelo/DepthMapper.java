@@ -7,11 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,9 +20,8 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import org.opencv.calib3d.Calib3d;
-import org.opencv.calib3d.StereoSGBM;
+import org.opencv.calib3d.StereoBM;
 import org.opencv.core.Core;
-import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
@@ -39,15 +33,10 @@ import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.Features2d;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.utils.Converters;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
 
@@ -87,7 +76,7 @@ public class DepthMapper implements Callable<DepthPair> {
 	private int mFocalLength = 0;
 	private int mImgWidth = 0;
 	private int mImgHeight = 0;
-	public Mat pointMid; 
+	public Mat pointMid;
 	public Mat colorMat;
 	private Bitmap thumbnail;
 	private int mWindowWidth = 0;
@@ -96,24 +85,25 @@ public class DepthMapper implements Callable<DepthPair> {
 
 	private FILTER_MODE mFilterMode = FILTER_MODE.NONE;
 
-	public DepthMapper(int width, int height, Mat matLeft, Mat colorMat, Bitmap thumbnail) {
+	public DepthMapper(int width, int height, Mat matLeft, Mat colorMat,
+			Bitmap thumbnail) {
 		mMatLeft = matLeft;
 		mImgWidth = width;
 		mImgHeight = height;
 		this.colorMat = colorMat;
 		this.thumbnail = thumbnail;
-		pointMid = new Mat(1,1,CvType.CV_32FC2);
-		
-		float xy[] = {matLeft.cols()/2, matLeft.rows()/2};
-		
+		pointMid = new Mat(1, 1, CvType.CV_32FC2);
+
+		float xy[] = { matLeft.cols() / 2, matLeft.rows() / 2 };
+
 		pointMid.put(0, 0, xy);
-		//Point mid = new Point(matLeft.cols()/2,matLeft.rows()/2);
-		
-		
-//		List<Point> temp = new ArrayList<Point>(1);
-//		temp.add(mid);
-//		(Converters.vector_Point_to_Mat(temp)).convertTo(pointMid, CvType.CV_32F);
-		
+		// Point mid = new Point(matLeft.cols()/2,matLeft.rows()/2);
+
+		// List<Point> temp = new ArrayList<Point>(1);
+		// temp.add(mid);
+		// (Converters.vector_Point_to_Mat(temp)).convertTo(pointMid,
+		// CvType.CV_32F);
+
 		mFocalLength = width;
 		PIXEL_PRODUCTS = new int[256][256];
 		for (int i = 0; i < 256; i++) {
@@ -121,11 +111,12 @@ public class DepthMapper implements Callable<DepthPair> {
 				PIXEL_PRODUCTS[i][j] = i * j;
 			}
 		}
-		
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+				.permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 		initMatrices();
-		
+
 		filters.put(FILTER_MODE.MEDIAN, new FilterFunc() {
 			public int filter(Window window) {
 				return window.getMedian();
@@ -162,7 +153,7 @@ public class DepthMapper implements Callable<DepthPair> {
 			}
 		});
 	}
-	
+
 	private void initMatrices() {
 		// float[] camMatVals = { 5.25221191e+002f, 0.f, 2.45101059e+002f, 0.f,
 		// 5.25221191e+002f, 3.21628296e+002f, 0.f, 0.f, 1.f };
@@ -171,81 +162,87 @@ public class DepthMapper implements Callable<DepthPair> {
 		// 3.25737684e-003f, 2.18995404e-003f, -8.89789343e-001f };
 		float[] distMatVals = { 0.f, 0.f, 0.f, 0.f, 0.f };
 		float[] qMatVals = { 1.f, 0.f, 0.f, -320.f, 0.f, 1.f, 0.f, -439.f, 0.f,
-				0.f, 0.f, (float) mFocalLength / 10, 0.f, 0.f, (-1 / 150.f), 0.f };
+				0.f, 0.f, (float) mFocalLength / 10, 0.f, 0.f, (-1 / 150.f),
+				0.f };
 		mCameraMatrix.put(0, 0, camMatVals);
 		mDistCoeffs.put(0, 0, distMatVals);
 		mQMatrix.put(0, 0, qMatVals);
 	}
-	
 
-	
-	
-	private Mat transformMidpoint(Mat midPoint, Mat transform){
-		
-		Mat dst = new Mat(1,1,CvType.CV_32FC2);
+	private Mat transformMidpoint(Mat midPoint, Mat transform) {
+
+		Mat dst = new Mat(1, 1, CvType.CV_32FC2);
 		String output = "";
 		Mat m = new Mat();
 		transform.convertTo(m, CvType.CV_32F);
-		
+
 		Core.perspectiveTransform(midPoint, dst, m);
-		
-		
-		//Log points
-		/*for(int i=0; i<midPoint.cols(); i++){
-			output+=Arrays.toString(midPoint.get(0, i));
-			output+=Arrays.toString(dst.get(0, i));
-		}*/
-		
-		output += Arrays.toString(midPoint.get(0,0));
+
+		// Log points
+		/*
+		 * for(int i=0; i<midPoint.cols(); i++){
+		 * output+=Arrays.toString(midPoint.get(0, i));
+		 * output+=Arrays.toString(dst.get(0, i)); }
+		 */
+
+		output += Arrays.toString(midPoint.get(0, 0));
 		output += Arrays.toString(dst.get(0, 0));
-				
+
 		Log.i("DepthMapper", output);
-		
+
 		return dst;
 	}
-	
+
 	public DepthPair call() {
 		Bitmap result = null;
 		DepthPair res = null;
 
 		if (generateDepthMap()) {
-			
-			//Server.sendColor(colorMat);
-			
-			Mat temp = Mat.zeros(3,4,CvType.CV_32FC2);
+
+			// Server.sendColor(colorMat);
+
+			Mat temp = Mat.zeros(3, 4, CvType.CV_32FC2);
 			float[] f00 = new float[2];
 			float[] f23 = new float[2];
 			float[] f11 = new float[2];
-			
+
 			f00[0] = 3;
 			f00[1] = (float) 1.7;
 			f23[0] = 5;
-			f11[0] = (float)(1.4);
-			
+			f11[0] = (float) (1.4);
+
 			temp.put(0, 0, f00);
-			temp.put(2,3, f23);
+			temp.put(2, 3, f23);
 			temp.put(1, 1, f11);
-			//Server.send(temp);
-			
-			LinkedList<LinkedList<Point>> goodPoints = NonfreeJNILib.surfDetect( mMatLeft.nativeObj, mMatRight.nativeObj );
-			
-			/*// Detect features
-			FeatureDetector fd = FeatureDetector
-					.create(FeatureDetector.FAST);
+			// Server.send(temp);
+
+			// LinkedList<LinkedList<Point>> goodPoints =
+			// NonfreeJNILib.surfDetect( mMatLeft.nativeObj, mMatRight.nativeObj
+			// );
+			// LinkedList<Point> goodKPLeft = goodPoints.get(0);
+			// LinkedList<Point> goodKPRight = goodPoints.get(1);
+
+			// Detect features
+			Log.w(TAG, "Detecting Features.");
+			FeatureDetector fd = FeatureDetector.create(FeatureDetector.ORB);
 			MatOfKeyPoint leftKP = new MatOfKeyPoint();
 			MatOfKeyPoint rightKP = new MatOfKeyPoint();
 			fd.detect(mMatLeft, leftKP);
 			fd.detect(mMatRight, rightKP);
+			Log.w(TAG, "" + (leftKP.rows() * leftKP.cols())
+					+ " features found in left image.");
 
 			// Extract feature descriptors
+			Log.w(TAG, "Extracting descriptors.");
 			DescriptorExtractor de = DescriptorExtractor
-					.create(DescriptorExtractor.BRIEF);
+					.create(DescriptorExtractor.ORB);
 			Mat leftKPDesc = new Mat();
 			Mat rightKPDesc = new Mat();
 			de.compute(mMatLeft, leftKP, leftKPDesc);
 			de.compute(mMatRight, rightKP, rightKPDesc);
 
 			// Match features
+			Log.w(TAG, "Matching Features.");
 			DescriptorMatcher dm = DescriptorMatcher
 					.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 			List<MatOfDMatch> featMatchesList = new ArrayList<MatOfDMatch>();
@@ -256,8 +253,9 @@ public class DepthMapper implements Callable<DepthPair> {
 			featMatchesListReverse.add(new MatOfDMatch());
 			dm.knnMatch(leftKPDesc, rightKPDesc, featMatchesList, 2);
 			dm.knnMatch(rightKPDesc, leftKPDesc, featMatchesListReverse, 2);
-			
+
 			// Filter the good matches
+			Log.w(TAG, "Performing ratio test.");
 			LinkedList<DMatch> goodMatchesList = new LinkedList<DMatch>();
 			for (int i = 0; i < featMatchesList.size(); i++) {
 				DMatch[] matchesArray1 = featMatchesList.get(i).toArray();
@@ -270,14 +268,12 @@ public class DepthMapper implements Callable<DepthPair> {
 				}
 			}
 
-
 			// Get keypoints of good matches
+			Log.w(TAG, "Getting good keypoints.");
 			MatOfDMatch goodMatches = new MatOfDMatch();
 			goodMatches.fromList(goodMatchesList);
 			List<KeyPoint> kpListLeft = leftKP.toList();
 			List<KeyPoint> kpListRight = rightKP.toList();
-			List<KeyPoint> kpListGoodLeft = new ArrayList<KeyPoint>();
-			List<KeyPoint> kpListGoodRight = new ArrayList<KeyPoint>();
 			LinkedList<Point> goodKPLeft = new LinkedList<Point>();
 			LinkedList<Point> goodKPRight = new LinkedList<Point>();
 			for (int i = 0; i < goodMatchesList.size(); i++) {
@@ -288,48 +284,46 @@ public class DepthMapper implements Callable<DepthPair> {
 				if (Math.abs(leftPoint.y - rightPoint.y) < (mMatLeft.rows() / 8)) {
 					goodKPLeft
 							.addLast(kpListLeft.get(goodMatchesList.get(i).queryIdx).pt);
-					kpListGoodLeft
-							.add(kpListLeft.get(goodMatchesList.get(i).queryIdx));
 					goodKPRight
 							.addLast(kpListRight.get(goodMatchesList.get(i).trainIdx).pt);
-					kpListGoodRight
-							.add(kpListRight.get(goodMatchesList.get(i).trainIdx));
 				} else {
 					goodMatchesList.remove(i);
 					i--;
 				}
-			}*/
-			
+			}
+
 			/* Remove Outliers */
-			LinkedList<Point> goodKPLeft = goodPoints.get(0);
-			LinkedList<Point> goodKPRight = goodPoints.get(1);
-			LinkedList<Integer> firstOutlierIndices = removeOutliers(goodKPLeft, goodKPRight);
-			
-			Log.w(TAG, "FIRST OUTLIER REMOVAL");
+			LinkedList<Integer> firstOutlierIndices = removeOutliers(
+					goodKPLeft, goodKPRight);
+
+			Log.w(TAG, "Removing outliers");
 			int indices_removed = 0;
-			for(int index : firstOutlierIndices) {
-				Log.w(TAG, "REMOVING INDEX " + index);
+			for (int index : firstOutlierIndices) {
+				// Log.w(TAG, "REMOVING INDEX " + index);
 				int index_to_remove = index - indices_removed;
 				goodKPLeft.remove(index_to_remove);
 				goodKPRight.remove(index_to_remove);
-				indices_removed ++;
+				indices_removed++;
 			}
 
-			Log.w(TAG, "REMOVED ALL INDICES");
-			
-			LinkedList<Integer> outlierIndices = NormalFilter(goodKPLeft, goodKPRight);
+			Log.w(TAG, "Removed first set of indices.");
+			Log.w(TAG, "Performing normal filter.");
+
+			LinkedList<Integer> outlierIndices = NormalFilter(goodKPLeft,
+					goodKPRight);
 			indices_removed = 0;
-			for(int index : outlierIndices) {
-				Log.w(TAG, "REMOVING INDEX " + index);
+			for (int index : outlierIndices) {
+				// Log.w(TAG, "REMOVING INDEX " + index);
 				int index_to_remove = index - indices_removed;
 				goodKPLeft.remove(index_to_remove);
 				goodKPRight.remove(index_to_remove);
-				indices_removed ++;
+				indices_removed++;
 			}
 
-			Log.w(TAG, "REMOVED ALL INDICES");
+			Log.w(TAG, "Removed second set of indices.");
 
-			// Find fundamental matrix			
+			// Find fundamental matrix
+			Log.w(TAG, "Finding fundamental matrix.");
 			MatOfPoint2f leftKPf = new MatOfPoint2f();
 			MatOfPoint2f rightKPf = new MatOfPoint2f();
 			leftKPf.fromList(goodKPLeft);
@@ -338,43 +332,33 @@ public class DepthMapper implements Callable<DepthPair> {
 					Calib3d.RANSAC, 3, 0.99);
 
 			// Rectify
+			Log.w(TAG, "Calculating homography.");
 			Mat rectHomog1 = new Mat();
 			Mat rectHomog2 = new Mat();
 			Mat H1 = new Mat();
 			Mat H2 = new Mat();
 			Calib3d.stereoRectifyUncalibrated(leftKPf, rightKPf, fundMat2,
-					mMatLeft.size(), rectHomog1, rectHomog2, 5);
-			Calib3d.stereoRectifyUncalibrated(leftKPf, rightKPf, fundMat2,
 					mMatLeft.size(), H1, H2, 5);
 
-			rectHomog1.convertTo(rectHomog1, CvType.CV_32FC1);
-			rectHomog2.convertTo(rectHomog2, CvType.CV_32FC1);
-			Mat rectMat1 = mCameraMatrix.inv().mul(rectHomog1)
-					.mul(mCameraMatrix);
-			Mat rectMat2 = mCameraMatrix.inv().mul(rectHomog2)
-					.mul(mCameraMatrix);
-
-			Mat newCameraMatrix = new Mat();
-			newCameraMatrix = Calib3d.getOptimalNewCameraMatrix(mCameraMatrix,
-					mDistCoeffs, mMatLeft.size(), 1);
-
 			// Left rectify
+			Log.w(TAG, "Rectify left.");
 			Mat rectifiedLeftImage = new Mat(mMatLeft.size(), CvType.CV_8UC1);
 			Mat rectifiedShearLeftImage = new Mat(mMatLeft.size(),
 					CvType.CV_8UC1);
 			Imgproc.warpPerspective(mMatLeft, rectifiedLeftImage, H1,
-							mMatLeft.size());
+					mMatLeft.size());
 
 			// Right rectify
+			Log.w(TAG, "Rectify right.");
 			Mat rectifiedRightImage = new Mat(mMatLeft.size(), CvType.CV_8UC1);
 			Imgproc.warpPerspective(mMatRight, rectifiedRightImage, H2,
 					mMatRight.size());
-			
+
 			// Transform midpoint
 			Mat midFundLeft = transformMidpoint(pointMid, H1);
-			Mat midFundRight = transformMidpoint(pointMid, H2);
 
 			// Calculate shear transform
+			Log.w(TAG, "Calculate shear correction.");
 			double h1Array[] = new double[9];
 			H1.get(0, 0, h1Array);
 			Mat H1p = new Mat(3, 3, H1.type());
@@ -449,230 +433,251 @@ public class DepthMapper implements Callable<DepthPair> {
 			Mat H1s = new Mat(3, 3, H1.type());
 			double h1sArray[] = { k1, k2, 0, 0, 1, 0, 0, 0, 1 };
 			H1s.put(0, 0, h1sArray);
-			
+
 			// Correct shearing
+			Log.w(TAG, "Correcting left shearing.");
 			Imgproc.warpPerspective(rectifiedLeftImage,
-					rectifiedShearLeftImage, H1s, mMatLeft.size());			
-			
-			Mat midShear = transformMidpoint(midFundLeft,H1s);
-			
-			float [] newMidPointLeft = new float[2];
+					rectifiedShearLeftImage, H1s, mMatLeft.size());
+
+			Mat midShear = transformMidpoint(midFundLeft, H1s);
+
+			float[] newMidPointLeft = new float[2];
 			pointMid.get(0, 0, newMidPointLeft);
-			/*float [] newMidPointRight = new float[2];
-			midFundRight.get(0, 0, newMidPointRight);
-			
-			double Q33 = ( newMidPointLeft[0] - newMidPointRight[0] ) * .06666666666;*/
-			
+
 			// Calculate disparities of original
-			 StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
-			// 13);
-			// StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 3, 128, 256, 20,
-			// 		16, 1, 100, 20, true);
-			//StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 11, 968, 3872, -1,
-					20, 5, 100, 20, true);
+			Log.w(TAG, "Computing stereo.");
+			StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 128, 15);
+			// StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 3, 128, 256,
+			// 20,
+			// 16, 1, 100, 20, true);
+			// StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 11, 968, 3872,
+			// -1,
+			// 20, 5, 100, 20, true);
 			Mat disparityBM = new Mat(mMatLeft.rows(), mMatLeft.cols(),
 					CvType.CV_32F);
 			Mat disparityBMFinal = new Mat(mMatLeft.rows(), mMatLeft.cols(),
 					CvType.CV_8U);
-			//sgBlockMatcher.compute(rectifiedShearLeftImage, rectifiedRightImage, disparityBM);
-			blockMatcher.compute(rectifiedShearLeftImage, rectifiedRightImage, disparityBM);
-			disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
-					255.0 / (96 * 16.));
-			
-			Mat dispUnShear = new Mat(mMatLeft.rows(), mMatLeft.cols(), CvType.CV_8U);
-			Mat dispUnWarpShear = new Mat(mMatLeft.rows(), mMatLeft.cols(), CvType.CV_8U);
-			
-			Imgproc.warpPerspective(disparityBMFinal, dispUnShear, H1s, mMatLeft.size(), Imgproc.WARP_INVERSE_MAP);
-			Imgproc.warpPerspective(dispUnShear, dispUnWarpShear, H1, mMatLeft.size(), Imgproc.WARP_INVERSE_MAP);
-			
-			result = MichelangeloCamera.grayMatToBitmap(dispUnWarpShear);
+			// sgBlockMatcher.compute(rectifiedShearLeftImage,
+			// rectifiedRightImage, disparityBM);
+			// blockMatcher.compute(rectifiedShearLeftImage,
+			// rectifiedRightImage,
+			// disparityBM);
+			// disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
+			// 255.0 / (96 * 16.));
+			NonfreeJNILib.computeStereo(rectifiedShearLeftImage.nativeObj,
+					rectifiedRightImage.nativeObj, disparityBM.nativeObj,
+					disparityBMFinal.nativeObj);
 			Log.w(TAG, "Disparity map computed (Block Match).");
-			
+
+			Mat dispUnShear = new Mat(mMatLeft.rows(), mMatLeft.cols(),
+					CvType.CV_8U);
+			Mat dispUnWarpShear = new Mat(mMatLeft.rows(), mMatLeft.cols(),
+					CvType.CV_8U);
+
+			Log.w(TAG, "Unwarping disparity.");
+			Imgproc.warpPerspective(disparityBMFinal, dispUnShear, H1s,
+					mMatLeft.size(), Imgproc.WARP_INVERSE_MAP);
+			Imgproc.warpPerspective(dispUnShear, dispUnWarpShear, H1,
+					mMatLeft.size(), Imgproc.WARP_INVERSE_MAP);
+
+			result = MichelangeloCamera.grayMatToBitmap(dispUnWarpShear);
+
+			Log.w(TAG, "Finished computing.");
 			res = new DepthPair(dispUnWarpShear, colorMat, result, thumbnail);
-						
-			// Send disparity to server		
-			//Server.sendGray(disparityBMFinal);			
-			
-			// Receive download url, download	
-			/*String url = Server.receive();
-			String fileName = url.substring(33);
-			Server.downloadFromUrl(url, fileName);
-			MichelangeloCamera.saveThumbnail(thumbnail, fileName+".jpg");*/
-		}		
-		
-		return res;		
+		}
+
+		return res;
 	}
-	
-	
-	
+
 	/*
-	 * Returns Array of LinkedList of KeyPoints on matrix. idx 0 of return matrix is
-	 * left KPs, idx 1 of return matrix is right KPs
+	 * Returns Array of LinkedList of KeyPoints on matrix. idx 0 of return
+	 * matrix is left KPs, idx 1 of return matrix is right KPs
 	 * 
 	 * The return contains indices of the outliers that need to be removed
-	 *  
-	 * ########################################################
-	 *  
-	 *       ASSUMES THAT leftKps.size() == rightKps.size()
 	 * 
 	 * ########################################################
-	 *  
+	 * 
+	 * ASSUMES THAT leftKps.size() == rightKps.size()
+	 * 
+	 * ########################################################
 	 */
-	public LinkedList<Integer> NormalFilter(LinkedList<Point> leftKps, LinkedList<Point> rightKps) {
-		
+	public LinkedList<Integer> NormalFilter(LinkedList<Point> leftKps,
+			LinkedList<Point> rightKps) {
+
 		float slmean = 0;
 		float slstddev = 0;
-		
+
 		float dstmean = 0;
 		float dststddev = 0;
-		
+
 		LinkedList<Integer> result = new LinkedList<Integer>();
-		
+
 		LinkedList<Float> slopes = new LinkedList<Float>();
 		LinkedList<Float> dists = new LinkedList<Float>();
 		Iterator<Point> iLeft = leftKps.iterator();
 		Iterator<Point> iRight = rightKps.iterator();
-		while(iLeft.hasNext()) {
+		while (iLeft.hasNext()) {
 			Point left = iLeft.next();
 			Point right = iRight.next();
 			float dy = (float) (right.y - left.y);
 			float dx = (float) ((right.x + mMatLeft.cols()) - left.x);
 			float slope = dy / dx;
-			float dist  = dx * dx + dy * dy;
+			float dist = dx * dx + dy * dy;
 			slmean += slope;
-			slopes.add(slope); // slopes will be in the same order as leftKps and rightKps
+			slopes.add(slope); // slopes will be in the same order as leftKps
+								// and rightKps
 			dstmean += dist;
 			dists.add(dist);
 		}
-		
+
 		slmean /= leftKps.size(); // get the mean
 		dstmean /= leftKps.size();
-		
+
 		/* Now calculate the stdDev */
-		
+
 		Iterator<Float> iSlopes = slopes.iterator();
 		Iterator<Float> iDists = dists.iterator();
-		
-		while(iSlopes.hasNext()) {
+
+		while (iSlopes.hasNext()) {
 			float val = (iSlopes.next() - slmean);
 			slstddev += (val * val);
 			float dstval = iDists.next() - dstmean;
 			dststddev += (dstval * dstval);
 		}
-		
-		slstddev = (float) Math.sqrt(slstddev /leftKps.size());		
+
+		slstddev = (float) Math.sqrt(slstddev / leftKps.size());
 		dststddev = (float) Math.sqrt(dststddev / leftKps.size());
-		
+
 		/* Now add the outliers to the result list if they exceed stddev */
 
 		iSlopes = slopes.iterator(); // reset the iterator
 		iDists = dists.iterator();
-		
+
 		int i = 0;
 		int slope_outliers = 0;
 		int dist_outliers = 0;
-		
-		while(iSlopes.hasNext()) {
+
+		while (iSlopes.hasNext()) {
 			i++;
 			float slope = iSlopes.next();
 			float dist = iDists.next();
-			if(Math.abs(slope - slmean) > (2.0 * slstddev)) {
-				Log.w(TAG, "slope: " + slope + " mean: " + slmean + " stddev: " + slstddev);
-				result.add(i-1);
-				slope_outliers ++;
+			if (Math.abs(slope - slmean) > (2.0 * slstddev)) {
+				// Log.w(TAG, "slope: " + slope + " mean: " + slmean +
+				// " stddev: "
+				// + slstddev);
+				result.add(i - 1);
+				slope_outliers++;
 				continue;
 			}
-			if(Math.abs(dist - dstmean) > (2.0 * dststddev)) {
-				Log.w(TAG, "dist: " + dist + " mean: " + dstmean + " stddev: " + dststddev);
-				result.add(i-1);
-				dist_outliers ++;
+			if (Math.abs(dist - dstmean) > (2.0 * dststddev)) {
+				// Log.w(TAG, "dist: " + dist + " mean: " + dstmean +
+				// " stddev: "
+				// + dststddev);
+				result.add(i - 1);
+				dist_outliers++;
 			}
 		}
-		Log.w(TAG, "RESULT HAS " + result.size() + " elements, original had " + leftKps.size());
-		Log.w(TAG, "removed " + slope_outliers + " slope outliers and " + dist_outliers + " dist outliers");
+		Log.w(TAG, "RESULT HAS " + result.size() + " elements, original had "
+				+ leftKps.size());
+		Log.w(TAG, "removed " + slope_outliers + " slope outliers and "
+				+ dist_outliers + " dist outliers");
 		return result;
 	}
 
-	public LinkedList<Integer> removeOutliers(LinkedList<Point> leftKps, LinkedList<Point> rightKps) {
-		
+	public LinkedList<Integer> removeOutliers(LinkedList<Point> leftKps,
+			LinkedList<Point> rightKps) {
+
 		LinkedList<Integer> result = new LinkedList<Integer>();
-		
+
 		LinkedList<Float> slopes = new LinkedList<Float>();
 		LinkedList<Float> dists = new LinkedList<Float>();
 		Iterator<Point> iLeft = leftKps.iterator();
 		Iterator<Point> iRight = rightKps.iterator();
-		while(iLeft.hasNext()) {
+		while (iLeft.hasNext()) {
 			Point left = iLeft.next();
 			Point right = iRight.next();
 			float dy = (float) (right.y - left.y);
 			float dx = (float) ((right.x + mMatLeft.cols()) - left.x);
 			float slope = dy / dx;
-			float dist  = dx * dx + dy * dy;
-			//slmean += slope;
-			slopes.add(slope); // slopes will be in the same order as leftKps and rightKps
-			//dstmean += dist;
+			float dist = dx * dx + dy * dy;
+			// slmean += slope;
+			slopes.add(slope); // slopes will be in the same order as leftKps
+								// and rightKps
+			// dstmean += dist;
 			dists.add(dist);
 		}
-		
+
 		/* Sort so our calculations are easier */
-		
+
 		Collections.sort(slopes);
 		Collections.sort(dists);
-		
+
 		/* Get the median and quartiles */
-		
-		//float slmedian = (slopes.get(slopes.size()/2) + slopes.get((slopes.size() + 1) / 2)) / 2;
-		//float dstmedian = (dists.get(dists.size()/2) + dists.get((dists.size() + 1) / 2)) / 2;
-		
+
+		// float slmedian = (slopes.get(slopes.size()/2) +
+		// slopes.get((slopes.size() + 1) / 2)) / 2;
+		// float dstmedian = (dists.get(dists.size()/2) +
+		// dists.get((dists.size() + 1) / 2)) / 2;
+
 		int upperQuartRoundUp = ((slopes.size() * 3) + 1) / 4;
 		int upperQuartRoundDown = (slopes.size() * 3) / 4;
 		int lowerQuartRoundUp = (slopes.size() + 1) / 4;
 		int lowerQuartRoundDown = slopes.size() / 4;
-		
-		float slUpperQuartile = (slopes.get(upperQuartRoundUp) + slopes.get(upperQuartRoundDown)) / 2;
-		float dstUpperQuartile = (dists.get(upperQuartRoundUp) + dists.get(upperQuartRoundDown)) / 2;
-		float slLowerQuartile = (slopes.get(lowerQuartRoundUp) + slopes.get(lowerQuartRoundDown)) / 2;
-		float dstLowerQuartile = (dists.get(lowerQuartRoundUp) + dists.get(lowerQuartRoundDown)) / 2;
-				
+
+		float slUpperQuartile = (slopes.get(upperQuartRoundUp) + slopes
+				.get(upperQuartRoundDown)) / 2;
+		float dstUpperQuartile = (dists.get(upperQuartRoundUp) + dists
+				.get(upperQuartRoundDown)) / 2;
+		float slLowerQuartile = (slopes.get(lowerQuartRoundUp) + slopes
+				.get(lowerQuartRoundDown)) / 2;
+		float dstLowerQuartile = (dists.get(lowerQuartRoundUp) + dists
+				.get(lowerQuartRoundDown)) / 2;
+
 		/* Calculate the valid ranges */
-		
+
 		float slMajorQuartileRange = (slUpperQuartile - slLowerQuartile) * 3;
-		float dstMajorQuartileRange = (dstUpperQuartile - dstLowerQuartile) * 3; 
-		float slUpperMajorFence = slUpperQuartile + slMajorQuartileRange; 
-		float dstUpperMajorFence = dstUpperQuartile + dstMajorQuartileRange; 
-		float slLowerMajorFence = slLowerQuartile - slMajorQuartileRange; 
+		float dstMajorQuartileRange = (dstUpperQuartile - dstLowerQuartile) * 3;
+		float slUpperMajorFence = slUpperQuartile + slMajorQuartileRange;
+		float dstUpperMajorFence = dstUpperQuartile + dstMajorQuartileRange;
+		float slLowerMajorFence = slLowerQuartile - slMajorQuartileRange;
 		float dstLowerMajorFence = dstLowerQuartile - dstMajorQuartileRange;
 
 		Iterator<Float> iSlopes = slopes.iterator(); // reset the iterator
 		Iterator<Float> iDists = dists.iterator();
-		
+
 		/* Remove Outliers if they land outside the fences */
-		
+
 		int i = 0;
 		int slope_outliers = 0;
 		int dist_outliers = 0;
-		
-		while(iSlopes.hasNext()) {
+
+		while (iSlopes.hasNext()) {
 			i++;
 			float slope = iSlopes.next();
 			float dist = iDists.next();
-			if(slope < slLowerMajorFence || slope > slUpperMajorFence) {
-				Log.w(TAG, "slope: " + slope + " UppperFence: " + slUpperMajorFence + " LowerFence: " + slLowerMajorFence);
-				result.add(i-1);
-				slope_outliers ++;
+			if (slope < slLowerMajorFence || slope > slUpperMajorFence) {
+				// Log.w(TAG, "slope: " + slope + " UppperFence: "
+				// + slUpperMajorFence + " LowerFence: "
+				// + slLowerMajorFence);
+				result.add(i - 1);
+				slope_outliers++;
 				continue;
 			}
-			if(dist < dstLowerMajorFence || dist > dstUpperMajorFence) {
-				Log.w(TAG, "dist: " + dist + " UppperFence: " + dstUpperMajorFence + " LowerFence: " + dstLowerMajorFence);
-				result.add(i-1);
-				dist_outliers ++;
+			if (dist < dstLowerMajorFence || dist > dstUpperMajorFence) {
+				// Log.w(TAG, "dist: " + dist + " UppperFence: "
+				// + dstUpperMajorFence + " LowerFence: "
+				// + dstLowerMajorFence);
+				result.add(i - 1);
+				dist_outliers++;
 			}
 		}
-		Log.w(TAG, "RESULT HAS " + result.size() + " elements, original had " + leftKps.size());
-		Log.w(TAG, "removed " + slope_outliers + " slope outliers and " + dist_outliers + " dist outliers");
+		Log.w(TAG, "RESULT HAS " + result.size() + " elements, original had "
+				+ leftKps.size());
+		Log.w(TAG, "removed " + slope_outliers + " slope outliers and "
+				+ dist_outliers + " dist outliers");
 		return result;
 	}
-	
+
 	public Mat combineImages(Mat leftMat, Mat rightMat) {
 		Mat combine = new Mat(leftMat.rows(), leftMat.cols() + rightMat.cols(),
 				leftMat.type());
@@ -1613,7 +1618,5 @@ public class DepthMapper implements Callable<DepthPair> {
 			}
 		}
 	}
-	
-	
 
 }

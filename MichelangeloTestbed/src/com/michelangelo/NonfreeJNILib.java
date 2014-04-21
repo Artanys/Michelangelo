@@ -24,4 +24,7 @@ public class NonfreeJNILib {
 
 	public static native LinkedList<LinkedList<Point>> surfDetect(
 			long pImageLeft, long pImageRight);
+
+	public static native void computeStereo(long pImageLeft, long pImageRight,
+			long pDisparity, long pNormalized);
 }

@@ -188,14 +188,35 @@ JNIEXPORT jobject JNICALL Java_com_michelangelo_NonfreeJNILib_surfDetect(
 	return listBoth;
 }
 
+void computeStereo(Mat left, Mat right, Mat disp, Mat norm) {
+	// Create a stereo matcher and set its state
+	StereoBM bm;
+	LOG_INFO("Starting JNI call.");
+	bm.state->minDisparity = -50;
+	bm.state->numberOfDisparities = 96;
+	bm.state->preFilterCap = 21;
+	bm.state->preFilterSize = 41;
+	bm.state->SADWindowSize = 17;
+	bm.state->textureThreshold = 0;
+	bm.state->uniquenessRatio = 7;
+	bm.state->speckleWindowSize = 100;
+	bm.state->speckleRange = 20;
+	bm (left, right, disp, CV_32F);
+    normalize ( disp, norm, 0, 256, NORM_MINMAX, CV_8UC1 );
+	LOG_INFO("Finished JNI call.");
+}
+
 extern "C" {
-JNIEXPORT jint JNICALL Java_com_michelangelo_NonfreeJNILib_surfExtract(
-		JNIEnv * env, jobject obj, jobject obj2, jobject obj3);
+JNIEXPORT void JNICALL Java_com_michelangelo_NonfreeJNILib_computeStereo(
+		JNIEnv * env, jobject obj, jlong pLeftMat, jlong pRightMat,
+		jlong pResultMat, jlong pNormMat);
 }
 ;
 
-JNIEXPORT jint JNICALL Java_com_michelangelo_NonfreeJNILib_surfExtract(
-		JNIEnv * env, jobject obj, jobject obj2, jobject obj3) {
-	int numDescriptors = surfExtract();
-	return numDescriptors;
+JNIEXPORT void JNICALL Java_com_michelangelo_NonfreeJNILib_computeStereo(
+		JNIEnv * env, jobject obj, jlong pLeftMat, jlong pRightMat,
+		jlong pDispMat, jlong pNormMat) {
+	Mat * leftMat = (Mat*) pLeftMat, *rightMat = (Mat*) pRightMat, *dispMat =
+			(Mat*) pDispMat, * normMat = (Mat*) pNormMat;
+	computeStereo(*leftMat, *rightMat, *dispMat, *normMat);
 }
