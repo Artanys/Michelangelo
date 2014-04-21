@@ -1,5 +1,7 @@
 package com.michelangelo;
 
+import java.util.ArrayList;
+
 import android.app.DialogFragment;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -145,7 +147,7 @@ public class MichelangeloModelviewer extends MichelangeloUI implements Modelview
     }
     
     @Override
-    public void onConfirmDeletePositiveClick(DialogFragment dialog) {
+    public void onConfirmDeletePositiveClick(DialogFragment dialog, ArrayList<Integer> selected) {
         // User touched the dialog's positive button
     }
 
