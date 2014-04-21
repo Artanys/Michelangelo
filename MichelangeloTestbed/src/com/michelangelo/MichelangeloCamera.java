@@ -26,9 +26,9 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -45,7 +45,6 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.media.ThumbnailUtils;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -55,7 +54,6 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -66,6 +64,7 @@ import android.widget.Toast;
 public class MichelangeloCamera extends MichelangeloUI implements
 		CaptureSettingsFragment.CaptureSettingsListener {
 
+	boolean new_picture = false;
 	private static final String TAG = "MichelangeloCamera";
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
@@ -77,12 +76,14 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private Camera mCamera = null;
 	private CameraPreview mPreview = null;
 	private ExecutorService mExecutor = null;
-	private ArrayList<Future<Bitmap>> mTaskList = null;
+	private ArrayList<Future<DepthPair>> mTaskList = null;
 	private ArrayList<DepthMapper> mDMList = null;
 	private Handler mHandler = null;
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
 	int cameraTimeCount;
+
+	public RenderingDialog rend = new RenderingDialog();
 	private static boolean first = true;
 
 	// public Vibrator vibe;
@@ -100,31 +101,34 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			@Override
 			public void onClick(View v) {
 				// get an image from the camera
-				mSensor.CaptureNumber += 1;
+				mSensor.firstImage = !mSensor.firstImage;
+				boolean temp = mSensor.firstImage;
 				mCamera.autoFocus(null);
 				mCamera.takePicture(null, null, mPicture);
-				if(mSensor.CaptureNumber == 1){
+				if(mSensor.CaptureNumber == 0){
 					mSensor.InitialYaw = mSensor.Rad_orientation[0];
-					mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
+					mSensor.NumberOfCaptures = 1;//MichelangeloCamera.NUM_IMAGES;
 				}
-				if((mSensor.CaptureNumber % 2) == 1){
+				mSensor.incrementCaptureNumber();
+				if(!mSensor.firstImage){
 					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 					lastImage.setVisibility(View.VISIBLE);
 				} else {
 					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 					lastImage.setVisibility(View.GONE);
 				}
-				if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
+				if(mSensor.getCaptureNumber() > mSensor.NumberOfCaptures){
 					Context context = getApplicationContext();
 					CharSequence text = "Finished Image Capture Series!";
 					int duration = Toast.LENGTH_SHORT;
 
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-					
-					mSensor.CaptureNumber = 0;
+					mSensor.setCaptureNumber(0);
 					mSensor.InitialYaw = 0;
 					mSensor.NumberOfCaptures = 1;
+
+					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+					lastImage.setVisibility(View.GONE);
+					mSensor.firstImage = true;
 				}
 			}
 		});
@@ -198,46 +202,24 @@ public class MichelangeloCamera extends MichelangeloUI implements
 							alvCircle.paint.setColor(Color.LTGRAY);
 							alvCircle.invalidate();
 						}
-						
-						if( mSensor.YAWREACHED && mSensor.ROLLREACHED && mSensor.PITCHREACHED ){
+						/*
+						if(mSensor.YAWREACHED && mSensor.ROLLREACHED && mSensor.PITCHREACHED ){
 							cameraTimeCount += 1;
 						} else {
 							cameraTimeCount = 0;
+							mSensor.allReached = false;
 						}
 						
-						if( cameraTimeCount == 12 && (mSensor.CaptureNumber % 2) == 0 ){
-							cameraTimeCount = 0;
+						if(cameraTimeCount == 12 && mSensor.firstImage && !mSensor.allReached){
 							takePicture();
+							cameraTimeCount = 0;
 						}
 						
-						if( cameraTimeCount == 28 && (mSensor.CaptureNumber % 2) == 1 ){
-							cameraTimeCount = 0;
+						if( cameraTimeCount == 28 && !mSensor.firstImage && !mSensor.allReached){
 							takePicture();
-						}
+							cameraTimeCount = 0;
+						}*/
 
-						// if(vibe.hasVibrator()) {
-						// long[] pattern = new long[3];
-						// pattern[1] = pulse_duration; //100 ms on
-						// pattern[2] = pulse_off_duration; //900 ms of off
-						//
-						// if(mSensor.ROLLREACHED) pattern[2] *= 2;
-						// if(mSensor.PITCHREACHED) pattern[2] *= 2;
-						// if(mSensor.YAWREACHED) pattern[2] *= 2;
-						// if(mSensor.ROLLREACHED && mSensor.PITCHREACHED &&
-						// mSensor.YAWREACHED) {
-						// vibe.cancel();
-						// }else if(mSensor.ROLLREACHED !=
-						// mSensor.prevRollReached || mSensor.PITCHREACHED !=
-						// mSensor.prevPitchReached
-						// || mSensor.YAWREACHED != mSensor.prevYawReached) {
-						// vibe.cancel();
-						// vibe.vibrate(pattern, 0);
-						// }
-						//
-						// }
-						// mSensor.prevRollReached = mSensor.ROLLREACHED;
-						// mSensor.prevPitchReached = mSensor.PITCHREACHED;
-						// mSensor.prevYawReached = mSensor.YAWREACHED;
 					}
 				});
 			}
@@ -254,43 +236,38 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	
 	public void takePicture() {
 		// get an image from the camera
-		mSensor.CaptureNumber += 1;
+		mSensor.firstImage = !mSensor.firstImage;
 		mCamera.autoFocus(null);
 		mCamera.takePicture(null, null, mPicture);
-		if(mSensor.CaptureNumber == 1){
+		if(mSensor.getCaptureNumber() == 0){
 			mSensor.InitialYaw = mSensor.Rad_orientation[0];
-			mSensor.NumberOfCaptures = MichelangeloCamera.NUM_IMAGES;
+			mSensor.NumberOfCaptures = 1;//MichelangeloCamera.NUM_IMAGES;
 		}
-		if((mSensor.CaptureNumber % 2) == 1){
+
+		mSensor.incrementCaptureNumber();
+		
+		if(mSensor.firstImage){
 			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 			lastImage.setVisibility(View.VISIBLE);
 		} else {
 			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 			lastImage.setVisibility(View.GONE);
 		}
-		if(mSensor.CaptureNumber == mSensor.NumberOfCaptures){
-			Context context = getApplicationContext();
-			CharSequence text = "Finished Image Capture Series!";
-			int duration = Toast.LENGTH_SHORT;
 
-			Toast toast = Toast.makeText(context, text, duration);
-			toast.show();
-			
-			mSensor.CaptureNumber = 0;
+		if(mSensor.getCaptureNumber() == mSensor.NumberOfCaptures){
+			mSensor.setCaptureNumber(0);
 			mSensor.InitialYaw = 0;
 			mSensor.NumberOfCaptures = 1;
+
+			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
+			lastImage.setVisibility(View.GONE);
+			mSensor.firstImage = true;
+			//mPreview.setVisibility(View.GONE);
 		}
+		//cameraTimeCount = 0;
 	}
 	
-	private void promptIntents(){
-		Intent intent = new Intent();
-		intent.setAction(android.content.Intent.ACTION_VIEW);
-		String url = "http://naumann.cloudapp.net/samples/vikram.vtk";
-		File file = new File("/sdcard/Download/hand.vtk");
-		//intent.setDataAndType(Uri.fromFile(file), "doc/*");
-		intent.setData(Uri.parse(url));
-		startActivity(intent); 
-	}
+
 
 	/** A safe way to get an instance of the Camera object. */
 	/**
@@ -437,7 +414,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					+ overlayBox.getTop(), lastImage.getWidth(), lastImage.getHeight());
 			lastImage.setImageBitmap(bitmapLast);
 			
-			if((mSensor.CaptureNumber % 2) == 0){
+			if(mSensor.firstImage){
 				guideBox.setX(getPixels(100));			
 			} else {
 				
@@ -457,7 +434,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			if (mDMList == null)
 				mDMList = new ArrayList<DepthMapper>();
 			if (mTaskList == null)
-				mTaskList = new ArrayList<Future<Bitmap>>();
+				mTaskList = new ArrayList<Future<DepthPair>>();
 			Parameters params = mCamera.getParameters();
 			float focalLength = params.getFocalLength();
 			
@@ -466,13 +443,49 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					bmHeight, grayMat, ImageMat, thumbnail);
 			dm.setWindowSize(DepthMapper.WINDOW_SIZE.MEDIUM);
 			dm.setFilterMode(DepthMapper.FILTER_MODE.NONE);
-			if (mDMList.size() > 0) {
-				mDMList.get(mDMList.size() - 1).setRightData(bmWidth, bmHeight,
+			mDMList.add(dm);
+			
+			if (mDMList.size() == 2) {
+				mDMList.get(0).setRightData(bmWidth, bmHeight,
 						grayMat);
 				mTaskList
-						.add(mExecutor.submit(mDMList.get(mDMList.size() - 1)));
+						.add(mExecutor.submit(mDMList.get(0)));
+				mDMList.clear();
+				new_picture = true;
 			}
-			mDMList.add(dm);
+			
+			if(new_picture) {
+				new_picture = false;
+//				AlertDialog alertDialog = new AlertDialog.Builder(MichelangeloCamera.this).create();
+//				alertDialog.setTitle("Loading");
+//				alertDialog.setMessage("Creating Depth Map...");
+//				alertDialog.show();
+				
+				rend.show(getFragmentManager(), "message");
+				
+				Runnable dialog = new Runnable() {
+					public void run() {
+
+						DepthPair result = null;
+						try {
+							//Thread.sleep(1000);
+							result = mTaskList.get(mTaskList.size() - 1).get();
+							rend.dismiss();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+			 			DepthMapConfirmDialog dispFrag = new DepthMapConfirmDialog();	 			
+			 			dispFrag.depthpair = result;	 			
+			 			dispFrag.show(getFragmentManager(), "message");
+					}
+				};
+				Thread myThread = new Thread(dialog);
+				myThread.start();
+			}
 		}
 	};
 	
@@ -526,10 +539,17 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 		ArrayList<File> matchingFiles = new ArrayList<File>();
 
-		File mediaStorageDir = new File(
+        File root = android.os.Environment.getExternalStorageDirectory();               
+
+        File mediaStorageDir = new File (root.getAbsolutePath() + "/Pictures/Michelangelo/models");
+        if(mediaStorageDir.exists()==false) {
+        	mediaStorageDir.mkdirs();
+        }
+		
+		/*File mediaStorageDir = new File(
 				Environment
 						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-				"Michelangelo");
+				"Michelangelo");*/
 		// This location works best if you want the created images to be shared
 		// between applications and persist after your app has been uninstalled.
 

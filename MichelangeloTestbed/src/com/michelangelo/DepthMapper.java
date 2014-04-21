@@ -51,7 +51,7 @@ import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
 
-public class DepthMapper implements Callable<Bitmap> {
+public class DepthMapper implements Callable<DepthPair> {
 	public int PIXEL_PRODUCTS[][] = null;
 
 	public enum IMAGE_POSITION {
@@ -204,14 +204,12 @@ public class DepthMapper implements Callable<Bitmap> {
 		return dst;
 	}
 	
-	public Bitmap call() {
+	public DepthPair call() {
 		Bitmap result = null;
+		DepthPair res = null;
 
 		if (generateDepthMap()) {
-			if(first){
-				first = false;
-				Server.initClient();
-			}
+			
 			//Server.sendColor(colorMat);
 			
 			Mat temp = Mat.zeros(3,4,CvType.CV_32FC2);
@@ -465,38 +463,44 @@ public class DepthMapper implements Callable<Bitmap> {
 			
 			double Q33 = ( newMidPointLeft[0] - newMidPointRight[0] ) * .06666666666;*/
 			
-			// Send data to server
-			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);			
-			Server.sendColor(colorMat);			
-			
 			// Calculate disparities of original
-			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
+			 StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
 			// 13);
 			// StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 3, 128, 256, 20,
 			// 		16, 1, 100, 20, true);
-			StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 11, 968, 3872, -1,
+			//StereoSGBM sgBlockMatcher = new StereoSGBM(0, 96, 11, 968, 3872, -1,
 					20, 5, 100, 20, true);
 			Mat disparityBM = new Mat(mMatLeft.rows(), mMatLeft.cols(),
 					CvType.CV_32F);
 			Mat disparityBMFinal = new Mat(mMatLeft.rows(), mMatLeft.cols(),
 					CvType.CV_8U);
-			sgBlockMatcher.compute(rectifiedShearLeftImage, rectifiedRightImage, disparityBM);
+			//sgBlockMatcher.compute(rectifiedShearLeftImage, rectifiedRightImage, disparityBM);
+			blockMatcher.compute(rectifiedShearLeftImage, rectifiedRightImage, disparityBM);
 			disparityBM.convertTo(disparityBMFinal, disparityBMFinal.type(),
 					255.0 / (96 * 16.));
-			result = MichelangeloCamera.grayMatToBitmap(disparityBMFinal);
+			
+			Mat dispUnShear = new Mat(mMatLeft.rows(), mMatLeft.cols(), CvType.CV_8U);
+			Mat dispUnWarpShear = new Mat(mMatLeft.rows(), mMatLeft.cols(), CvType.CV_8U);
+			
+			Imgproc.warpPerspective(disparityBMFinal, dispUnShear, H1s, mMatLeft.size(), Imgproc.WARP_INVERSE_MAP);
+			Imgproc.warpPerspective(dispUnShear, dispUnWarpShear, H1, mMatLeft.size(), Imgproc.WARP_INVERSE_MAP);
+			
+			result = MichelangeloCamera.grayMatToBitmap(dispUnWarpShear);
 			Log.w(TAG, "Disparity map computed (Block Match).");
 			
+			res = new DepthPair(dispUnWarpShear, colorMat, result, thumbnail);
+						
 			// Send disparity to server		
-			Server.sendGray(disparityBMFinal);			
+			//Server.sendGray(disparityBMFinal);			
 			
 			// Receive download url, download	
-			String url = Server.receive();
-			String fileName = url.substring(28);
+			/*String url = Server.receive();
+			String fileName = url.substring(33);
 			Server.downloadFromUrl(url, fileName);
-			MichelangeloCamera.saveThumbnail(thumbnail, fileName+".jpg");
+			MichelangeloCamera.saveThumbnail(thumbnail, fileName+".jpg");*/
 		}		
 		
-		return result;		
+		return res;		
 	}
 	
 	

@@ -80,5 +80,8 @@
     <string name="roll_label">Roll</string>
     <string name="pitch_label">Pitch</string>
     <string name="yaw_label">Yaw</string>
+    
+    <string name="Accept">Accept</string>
+    <string name="Reject">Reject</string>
 
 </resources>

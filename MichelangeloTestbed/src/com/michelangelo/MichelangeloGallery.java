@@ -1,14 +1,22 @@
 package com.michelangelo;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.text.DateFormat.Field;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.provider.MediaStore.Images;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,9 +34,12 @@ import android.widget.ImageView;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
+
+
 public class MichelangeloGallery extends MichelangeloUI implements ConfirmDeleteFragment.ConfirmDeleteListener{
 
     protected ArrayList<Drawable> thumbs = new ArrayList<Drawable>();
+    private static final String TAG = "Gallery";
     
     public class CheckableLayout extends FrameLayout implements Checkable {
         private boolean mChecked;
@@ -53,8 +64,9 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
         }
  
     }
-	
+
 	public void buttonClicked(View view) {
+		Log.d("buttonClicked");
 	    Intent intent = new Intent(this, MichelangeloGallery.class);
 	    startActivity(intent);
 	}
@@ -77,9 +89,26 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 
 	    gridview.setOnItemClickListener(new OnItemClickListener() {
 	        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-	            Toast.makeText(MichelangeloGallery.this, "" + position, Toast.LENGTH_SHORT).show();
-	            Intent intent = new Intent(MichelangeloGallery.this, MichelangeloModelviewer.class);
-	            startActivity(intent);
+	            //Toast.makeText(MichelangeloGallery.this, "" + position, Toast.LENGTH_SHORT).show();
+	            Log.d("Thumbnail CLicked");
+	            //Intent intent = new Intent(MichelangeloGallery.this, MichelangeloModelviewer.class);
+	            File root = android.os.Environment.getExternalStorageDirectory();               
+	    		
+	    		Intent intent = new Intent();
+	    		intent.setAction(android.content.Intent.ACTION_VIEW);
+	    		
+	    		ArrayList<File> filePaths = com.michelangelo.MichelangeloCamera.getMediaFiles();
+	    		File imgFile = filePaths.get(position);
+	    		
+	    		Log.d("imgFile: "+imgFile.getName());
+	    		String vtkFilepath = imgFile.getName().substring(0,imgFile.getName().indexOf(".jpg")); //grab vtk file name from thumbnail name
+	    		Log.d("vtkFile: "+vtkFilepath);
+
+	    		File file = new File(root.getAbsolutePath() + "/Pictures/Michelangelo/models/" +vtkFilepath); //construct vtk file path
+	    		intent.setDataAndType(Uri.fromFile(file), "doc/*");
+	    		//intent.setData(Uri.parse(vtkFilepath));
+	    		startActivity(intent); 
+	            
 	        }
 	    });
 
@@ -169,9 +198,7 @@ public class MichelangeloGallery extends MichelangeloUI implements ConfirmDelete
 	 * Set up the {@link android.app.ActionBar}.
 	 */
 	private void setupActionBar() {
-
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-
 	}
 
 	@Override
