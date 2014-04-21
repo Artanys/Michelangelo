@@ -1,5 +1,7 @@
 package com.michelangelo;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -11,22 +13,44 @@ public class ConfirmDeleteFragment extends DialogFragment {
 	
     // Use this instance of the interface to deliver action events
 	ConfirmDeleteListener mListener;
-    
+	static ArrayList<Integer> positions;
+	
+	static ConfirmDeleteFragment newInstance(ArrayList<Integer> selected) {
+		ConfirmDeleteFragment f = new ConfirmDeleteFragment();
+		positions = (ArrayList<Integer>)selected.clone();
+
+	    // Supply num input as an argument.
+	    Bundle args = new Bundle();
+	    args.putIntegerArrayList("selected", selected);
+	    f.setArguments(args);
+
+	    return f;
+	}
+	
+	public class ConfirmDeleteClickListener implements DialogInterface.OnClickListener {
+		private ArrayList<Integer> selected;
+		
+		public ConfirmDeleteClickListener (ArrayList<Integer> positions){
+			selected = positions;
+		}
+		
+        public void onClick(DialogInterface dialog, int id) {
+     	   // Send the positive button event back to the host activity
+            mListener.onConfirmDeletePositiveClick(ConfirmDeleteFragment.this, selected);
+        }
+	}
+	
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-    	
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        
+        ConfirmDeleteClickListener cl = new ConfirmDeleteClickListener(positions);
         
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         builder.setTitle(R.string.title_dialog_confirm_delete)
-               .setPositiveButton(R.string.action_ok, new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                	   // Send the positive button event back to the host activity
-                       mListener.onConfirmDeletePositiveClick(ConfirmDeleteFragment.this);
-                   }
-               })
+               .setPositiveButton(R.string.action_ok, cl)
                .setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
                        // Send the positive button event back to the host activity
@@ -50,7 +74,7 @@ public class ConfirmDeleteFragment extends DialogFragment {
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface ConfirmDeleteListener {
-        public void onConfirmDeletePositiveClick(DialogFragment dialog);
+        public void onConfirmDeletePositiveClick(DialogFragment dialog, ArrayList<Integer> selected);
         public void onConfirmDeleteNegativeClick(DialogFragment dialog);
     }
     

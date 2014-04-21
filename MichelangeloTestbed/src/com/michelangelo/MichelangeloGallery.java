@@ -1,22 +1,16 @@
 package com.michelangelo;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.text.DateFormat.Field;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.provider.MediaStore.Images;
+import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,13 +26,13 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ShareActionProvider;
-import android.widget.Toast;
 
 public class MichelangeloGallery extends MichelangeloUI implements
 		ConfirmDeleteFragment.ConfirmDeleteListener {
 
-	protected ArrayList<Drawable> thumbs = new ArrayList<Drawable>();
+	protected ArrayList<File> thumbs = new ArrayList<File>();
 	private static final String TAG = "Gallery";
+	private ArrayList<Integer> gridSelected;
 
 	public class CheckableLayout extends FrameLayout implements Checkable {
 		private boolean mChecked;
@@ -81,7 +75,7 @@ public class MichelangeloGallery extends MichelangeloUI implements
 		ArrayList<File> filePaths = com.michelangelo.MichelangeloCamera
 				.getMediaFiles();
 		for (File filePath : filePaths) {
-			thumbs.add(Drawable.createFromPath(filePath.toString()));
+			thumbs.add(filePath);
 		}
 
 		final GridView gridview = (GridView) findViewById(R.id.gridview);
@@ -129,9 +123,9 @@ public class MichelangeloGallery extends MichelangeloUI implements
 		gridview.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
 		gridview.setMultiChoiceModeListener(new MultiChoiceModeListener() {
 			private int numSelected = 0;
-			private ArrayList<Integer> positions = new ArrayList<Integer>();
 			private Intent shareModelsIntent;
 			private ArrayList<Uri> uris = new ArrayList<Uri>();
+			ArrayList<Integer> positions = new ArrayList<Integer>();
 
 			@Override
 			public void onItemCheckedStateChanged(ActionMode mode,
@@ -143,13 +137,13 @@ public class MichelangeloGallery extends MichelangeloUI implements
 				File root = android.os.Environment
 						.getExternalStorageDirectory();
 				File dir = new File(root.getAbsolutePath()
-						+ "/Pictures/Michelangelo/models");
+						+ "/Pictures/Michelangelo/models/");
 				ArrayList<File> filePaths = com.michelangelo.MichelangeloCamera
 						.getMediaFiles();
 				File imgFile = filePaths.get(position);
 				String vtkFilepath = imgFile.getName().substring(0,
 						imgFile.getName().indexOf(".jpg"));
-				File file = new File(dir + vtkFilepath);
+				File file = new File(dir + "/" + vtkFilepath);
 				Uri uri = Uri.fromFile(file);
 				shareModelsIntent.removeExtra(Intent.EXTRA_STREAM);
 
@@ -160,7 +154,7 @@ public class MichelangeloGallery extends MichelangeloUI implements
 					positions.remove(new Integer(position));
 					uris.remove(uri);
 				}
-				
+
 				shareModelsIntent.putParcelableArrayListExtra(
 						Intent.EXTRA_STREAM, uris);
 				mode.setTitle(gridview.getCheckedItemCount() + " selected");
@@ -178,7 +172,11 @@ public class MichelangeloGallery extends MichelangeloUI implements
 				case R.id.action_delete:
 					// Create an instance of the dialog fragment and show it
 					retBool = true;
-					DialogFragment dialog = new ConfirmDeleteFragment();
+					DialogFragment dialog = ConfirmDeleteFragment
+							.newInstance(positions);
+					Bundle args = new Bundle();
+					args.putIntegerArrayList("selected", positions);
+					dialog.setArguments(args);
 					dialog.show(getFragmentManager(), "ConfirmDeleteFragment");
 					mode.finish(); // Action picked, so close the CAB
 					return true;
@@ -208,31 +206,13 @@ public class MichelangeloGallery extends MichelangeloUI implements
 
 			private Intent createShareIntent() {
 				Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
-				ArrayList<Uri> uris = new ArrayList<Uri>();
-				File root = android.os.Environment
-						.getExternalStorageDirectory();
-				File dir = new File(root.getAbsolutePath()
-						+ "/Pictures/Michelangelo/models");
 				shareIntent
 						.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-				shareIntent.setType("text/plain");
+				shareIntent.setType("application/octet-stream");
 				shareIntent
 						.putExtra(Intent.EXTRA_SUBJECT, "3D Model(s) Shared");
 				shareIntent.putExtra(Intent.EXTRA_TEXT,
 						"Shared from Michelangelo's Gallery!");
-
-				ArrayList<File> filePaths = com.michelangelo.MichelangeloCamera
-						.getMediaFiles();
-				for (int pos : positions) {
-					File imgFile = filePaths.get(pos);
-					String vtkFilepath = imgFile.getName().substring(0,
-							imgFile.getName().indexOf(".jpg"));
-					File file = new File(dir + vtkFilepath);
-					Uri uri = Uri.fromFile(file);
-					uris.add(uri);
-				}
-				shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM,
-						uris);
 				shareModelsIntent = shareIntent;
 				return shareIntent;
 			}
@@ -332,7 +312,8 @@ public class MichelangeloGallery extends MichelangeloUI implements
 
 			// imageView.setImageResource(mThumbIds[position]);
 
-			imageView.setImageDrawable(thumbs.get(position));
+			imageView.setImageDrawable(Drawable.createFromPath(thumbs.get(
+					position).toString()));
 			thumbNails.add(position, imageView);
 
 			return layout;
@@ -353,9 +334,28 @@ public class MichelangeloGallery extends MichelangeloUI implements
 	// Fragment.onAttach() callback, which it uses to call the following methods
 	// defined by the NoticeDialogFragment.NoticeDialogListener interface
 	@Override
-	public void onConfirmDeletePositiveClick(DialogFragment dialog) {
+	public void onConfirmDeletePositiveClick(DialogFragment dialog,
+			ArrayList<Integer> selected) {
 		// User touched the dialog's positive button
 		// deleteSelectedItems();
+		GridView gridview = (GridView) findViewById(R.id.gridview);
+		ImageAdapter ia = (ImageAdapter) gridview.getAdapter();
+		SparseBooleanArray ba = gridview.getCheckedItemPositions();
+		File root = android.os.Environment.getExternalStorageDirectory();
+		File dir = new File(root.getAbsolutePath()
+				+ "/Pictures/Michelangelo/models/");
+		ArrayList<File> filePaths = com.michelangelo.MichelangeloCamera
+				.getMediaFiles();
+		for (int pos : selected) {
+			File imgFile = filePaths.get(pos);
+			String vtkFilepath = imgFile.getName().substring(0,
+					imgFile.getName().indexOf(".jpg"));
+			File file = new File(dir + "/" + vtkFilepath);
+			imgFile.delete();
+			file.delete();
+			thumbs.remove(imgFile);
+		}
+		ia.notifyDataSetChanged();
 	}
 
 	@Override
