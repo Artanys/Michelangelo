@@ -399,16 +399,19 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			mPreview.setVisibility(View.VISIBLE);
 
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-			//thumbnail
-			Bitmap thumbnail = ThumbnailUtils.extractThumbnail(bitmap, 100, 100);
-			saveBitmap(thumbnail,"THUMB_TEST");
+			
 			
 			int width = imageBox.getWidth();
 			int height = imageBox.getHeight();
 
 			Matrix mat = new Matrix();
 			mat.postRotate(90);
+			
 			Bitmap bitmapRot = Bitmap.createBitmap(bitmap, 0, 0,bitmap.getWidth(),bitmap.getHeight(), mat, true);
+			
+			//thumbnail
+			Bitmap thumbnail = ThumbnailUtils.extractThumbnail(bitmapRot, 100, 100);
+			
 			Bitmap bitmapResized = Bitmap.createScaledBitmap(bitmapRot, width, height, true);
 			bitmapLast = Bitmap.createBitmap(bitmapResized, guideBox.getLeft() + overlayBox.getLeft(), guideBox.getTop() + lastImageBox.getTop() 
 					+ overlayBox.getTop(), lastImage.getWidth(), lastImage.getHeight());
