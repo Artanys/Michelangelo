@@ -17,11 +17,18 @@
         <item>Gallery</item>
         <item>Help</item>
         <item>About</item>
-        <item>ModelViewer</item>
     </string-array>
 
-    <string name="content_about_us">Info about the Michelangelo team.</string>
-    <string name="content_help">How to use Michelangelo.</string>
+    <string name="content_about_us">
+        Senior Design Spring 2014: \n Neil Babaria \n 
+        Tyler Cox \n
+        Jordan Naumann \n 
+        Arit Paul \n
+        Vikram Sripadam \n
+        Mentor: Al Bovik \n
+        \n
+        Samples at naumann.cloudapp.net</string>
+    <string name="content_help">Take left image first, right image second. \n Accept or Reject the depthmap after processing. \n Check the gallery for opening models and sharing.</string>
     <string name="content_gallery">Welcome to the gallery!</string>
     <string name="action_open_drawer">Open the side menu</string>
     <string name="action_close_drawer">Close the side menu</string>
