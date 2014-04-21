@@ -26,9 +26,9 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -45,7 +45,6 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.media.ThumbnailUtils;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -55,7 +54,6 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -84,6 +82,8 @@ public class MichelangeloCamera extends MichelangeloUI implements
 	private MichelangeloSensor mSensor;
 	private Bitmap bitmapLast;
 	int cameraTimeCount;
+
+	public RenderingDialog rend = new RenderingDialog();
 	private static boolean first = true;
 
 	// public Vibrator vibe;
@@ -456,19 +456,35 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			
 			if(new_picture) {
 				new_picture = false;
-				DepthPair result = null;
-				try {
-					result = mTaskList.get(mTaskList.size() - 1).get();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}	
-	 			DepthMapConfirmDialog dispFrag = new DepthMapConfirmDialog();	 			
-	 			dispFrag.depthpair = result;	 			
-	 			dispFrag.show(getFragmentManager(), "message");
+//				AlertDialog alertDialog = new AlertDialog.Builder(MichelangeloCamera.this).create();
+//				alertDialog.setTitle("Loading");
+//				alertDialog.setMessage("Creating Depth Map...");
+//				alertDialog.show();
+				
+				rend.show(getFragmentManager(), "message");
+				
+				Runnable dialog = new Runnable() {
+					public void run() {
+
+						DepthPair result = null;
+						try {
+							//Thread.sleep(1000);
+							result = mTaskList.get(mTaskList.size() - 1).get();
+							rend.dismiss();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+			 			DepthMapConfirmDialog dispFrag = new DepthMapConfirmDialog();	 			
+			 			dispFrag.depthpair = result;	 			
+			 			dispFrag.show(getFragmentManager(), "message");
+					}
+				};
+				Thread myThread = new Thread(dialog);
+				myThread.start();
 			}
 		}
 	};
