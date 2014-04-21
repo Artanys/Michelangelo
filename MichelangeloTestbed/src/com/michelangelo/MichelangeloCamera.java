@@ -282,15 +282,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 		}
 	}
 	
-	private void promptIntents(){
-		Intent intent = new Intent();
-		intent.setAction(android.content.Intent.ACTION_VIEW);
-		String url = "http://naumann.cloudapp.net/samples/vikram.vtk";
-		File file = new File("/sdcard/Download/hand.vtk");
-		//intent.setDataAndType(Uri.fromFile(file), "doc/*");
-		intent.setData(Uri.parse(url));
-		startActivity(intent); 
-	}
+
 
 	/** A safe way to get an instance of the Camera object. */
 	/**
@@ -526,10 +518,17 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 		ArrayList<File> matchingFiles = new ArrayList<File>();
 
-		File mediaStorageDir = new File(
+        File root = android.os.Environment.getExternalStorageDirectory();               
+
+        File mediaStorageDir = new File (root.getAbsolutePath() + "/Pictures/Michelangelo/models");
+        if(mediaStorageDir.exists()==false) {
+        	mediaStorageDir.mkdirs();
+        }
+		
+		/*File mediaStorageDir = new File(
 				Environment
 						.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-				"Michelangelo");
+				"Michelangelo");*/
 		// This location works best if you want the created images to be shared
 		// between applications and persist after your app has been uninstalled.
 
