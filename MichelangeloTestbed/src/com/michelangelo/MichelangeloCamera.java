@@ -102,6 +102,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 			public void onClick(View v) {
 				// get an image from the camera
 				mSensor.firstImage = !mSensor.firstImage;
+				boolean temp = mSensor.firstImage;
 				mCamera.autoFocus(null);
 				mCamera.takePicture(null, null, mPicture);
 				if(mSensor.CaptureNumber == 0){
@@ -116,7 +117,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 					ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 					lastImage.setVisibility(View.GONE);
 				}
-				if(mSensor.getCaptureNumber() == mSensor.NumberOfCaptures){
+				if(mSensor.getCaptureNumber() > mSensor.NumberOfCaptures){
 					Context context = getApplicationContext();
 					CharSequence text = "Finished Image Capture Series!";
 					int duration = Toast.LENGTH_SHORT;
@@ -201,7 +202,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 							alvCircle.paint.setColor(Color.LTGRAY);
 							alvCircle.invalidate();
 						}
-						
+						/*
 						if(mSensor.YAWREACHED && mSensor.ROLLREACHED && mSensor.PITCHREACHED ){
 							cameraTimeCount += 1;
 						} else {
@@ -209,7 +210,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 							mSensor.allReached = false;
 						}
 						
-						if(cameraTimeCount == 12 && mSensor.firstImage){
+						if(cameraTimeCount == 12 && mSensor.firstImage && !mSensor.allReached){
 							takePicture();
 							cameraTimeCount = 0;
 						}
@@ -217,7 +218,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 						if( cameraTimeCount == 28 && !mSensor.firstImage && !mSensor.allReached){
 							takePicture();
 							cameraTimeCount = 0;
-						}
+						}*/
 
 					}
 				});
@@ -245,7 +246,7 @@ public class MichelangeloCamera extends MichelangeloUI implements
 
 		mSensor.incrementCaptureNumber();
 		
-		if(!mSensor.firstImage){
+		if(mSensor.firstImage){
 			ImageView lastImage = (ImageView) findViewById(R.id.last_image);
 			lastImage.setVisibility(View.VISIBLE);
 		} else {
