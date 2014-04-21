@@ -13,11 +13,9 @@
     <string name="title_activity_michelangelo_modelviewer">Model Viewer</string>
 
     <string-array name="menu_options_camera">
-        <item>Capture Settings</item>
         <item>Gallery</item>
         <item>Help</item>
         <item>About</item>
-        <item>ModelViewer</item>
     </string-array>
 
     <string name="content_about_us">Info about the Michelangelo team.</string>

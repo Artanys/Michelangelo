@@ -106,31 +106,31 @@ public class MichelangeloUI extends Activity  implements CaptureSettingsFragment
 	private void selectItem(int position) {
 		Intent intent = null;
 		
-		switch ( position ) {
+		switch ( position ) {/*
 		case 0:
 			// Create an instance of the dialog fragment and show it
 	        DialogFragment dialog = new CaptureSettingsFragment();
 	        dialog.show(getFragmentManager(), "CaptureSettingsFragment");
-			break;
-		case 1:
+			break;*/
+		case 0:
 			intent = new Intent ( this, MichelangeloGallery.class );
 			break;
-		case 2:
+		case 1:
 			intent = new Intent ( this, MichelangeloHelp.class );
 			break;
-		case 3:
+		case 2:
 			intent = new Intent ( this, MichelangeloAbout.class );
 			break;
 		
-		case 4:
+		/*case 4:
 			intent = new Intent ( this, STLViewActivity.class);
-			break;
+			break;*/
 		}
 	    // Highlight the selected item, update the title, and close the drawer
 	    //mDrawerList.setItemChecked(position, true);
 	    mDrawerLayout.closeDrawer(mDrawerList);
 		
-		if ( position != 0 ) startActivity ( intent );
+		startActivity ( intent );
 	}
 	
 	
