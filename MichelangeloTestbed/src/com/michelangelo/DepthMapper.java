@@ -229,7 +229,9 @@ public class DepthMapper implements Callable<Bitmap> {
 			temp.put(1, 1, f11);
 			//Server.send(temp);
 			
-			// Detect features
+			LinkedList<LinkedList<Point>> goodPoints = NonfreeJNILib.surfDetect( mMatLeft.nativeObj, mMatRight.nativeObj );
+			
+			/*// Detect features
 			FeatureDetector fd = FeatureDetector
 					.create(FeatureDetector.FAST);
 			MatOfKeyPoint leftKP = new MatOfKeyPoint();
@@ -298,10 +300,11 @@ public class DepthMapper implements Callable<Bitmap> {
 					goodMatchesList.remove(i);
 					i--;
 				}
-			}
+			}*/
 			
 			/* Remove Outliers */
-			
+			LinkedList<Point> goodKPLeft = goodPoints.get(0);
+			LinkedList<Point> goodKPRight = goodPoints.get(1);
 			LinkedList<Integer> firstOutlierIndices = removeOutliers(goodKPLeft, goodKPRight);
 			
 			Log.w(TAG, "FIRST OUTLIER REMOVAL");
@@ -311,8 +314,6 @@ public class DepthMapper implements Callable<Bitmap> {
 				int index_to_remove = index - indices_removed;
 				goodKPLeft.remove(index_to_remove);
 				goodKPRight.remove(index_to_remove);
-				kpListGoodLeft.remove(index_to_remove);
-				kpListGoodRight.remove(index_to_remove);
 				indices_removed ++;
 			}
 
@@ -325,8 +326,6 @@ public class DepthMapper implements Callable<Bitmap> {
 				int index_to_remove = index - indices_removed;
 				goodKPLeft.remove(index_to_remove);
 				goodKPRight.remove(index_to_remove);
-				kpListGoodLeft.remove(index_to_remove);
-				kpListGoodRight.remove(index_to_remove);
 				indices_removed ++;
 			}
 
@@ -468,7 +467,7 @@ public class DepthMapper implements Callable<Bitmap> {
 			
 			// Send data to server
 			Server.sendFrame(mMatLeft, 1, (double)-1*newMidPointLeft[0], (double)-1*newMidPointLeft[1], 112, -.06666666666, 4);			
-			Server.sendColor(mMatLeft);			
+			Server.sendColor(colorMat);			
 			
 			// Calculate disparities of original
 			// StereoBM blockMatcher = new StereoBM(StereoBM.BASIC_PRESET, 96,
