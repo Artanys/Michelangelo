@@ -95,7 +95,15 @@ public class Server {
 		flush();
 		Log.i("Server","grayMat sent to server");
 	}
-	
+	public static void close() {
+		flush();
+		try {
+			client.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
 	private static void flush(){
 		try {
 			ostream.flush();

@@ -35,6 +35,20 @@ public class MichelangeloSensor implements SensorEventListener {
 	public boolean PITCHREACHED = false;
 	public boolean ROLLREACHED = false;
 	public boolean YAWREACHED = true;
+	public boolean allReached = false;
+	public boolean firstImage = true;
+	
+	
+	public synchronized void setCaptureNumber(int num) {
+		this.CaptureNumber = num;
+	}
+	public synchronized int getCaptureNumber() {
+		return this.CaptureNumber;
+	}
+	
+	public synchronized void incrementCaptureNumber() {
+		this.CaptureNumber ++;
+	}
 	
 	public void onCreate(Context ActivityContext) {
 		
@@ -114,11 +128,11 @@ public class MichelangeloSensor implements SensorEventListener {
             internal_Deg_Orientation[1] = (int)(Rad_orientation[1]*DEG+90) - PITCHTARGET;
             internal_Deg_Orientation[2] = (int)(Rad_orientation[2]*DEG) - ROLLTARGET;
             
-			if( NumberOfCaptures == 1) {
+			/*if( CaptureNumber == 0) {
 				Deg_orientation[0] = 0;
-			} else {
+			} else {*/
 				Deg_orientation[0] = internal_Deg_Orientation[0];
-			}
+			//}
 			
 			if(Deg_orientation[0] >= 180)
 				Deg_orientation[0] -= 360;
@@ -141,11 +155,11 @@ public class MichelangeloSensor implements SensorEventListener {
             	ROLLREACHED = false;
             }
             
-            if(( -2 <= Deg_orientation[0]) && ( 2 >= Deg_orientation[0] )) {
+            //if(( -2 <= Deg_orientation[0]) && ( 2 >= Deg_orientation[0] )) {
             	YAWREACHED = true;
-            } else {
-            	YAWREACHED = false;
-            }
+            //} else {
+            	//YAWREACHED = false;
+            //}
         }
 	}
 }
